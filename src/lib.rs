@@ -9,10 +9,11 @@ use libc::*; // 导入 C 标准库的绑定
 
 // 导入 tantivy 搜索引擎库的功能
 use tantivy::collector::{TopDocs, Count};
+use tantivy::directory::error::OpenDirectoryError;
 use tantivy::query::QueryParser;
 use tantivy::schema::*;
 use tantivy::collector::{Collector, SegmentCollector};
-use tantivy::{Index, IndexReader, IndexWriter, SegmentReader, SegmentLocalId, DocId, Score, DocAddress, TantivyError};
+use tantivy::{Index, IndexReader, IndexWriter, SegmentReader, SegmentOrdinal, DocId, Score, DocAddress, TantivyError};
 use tantivy::ReloadPolicy;
 
 use rayon::prelude::*; // 导入 rayon 库，它提供了并行迭代器的功能
@@ -87,7 +88,7 @@ impl Collector for Docs {
     // 输入参数为 segment id 和 SegmentReader
     fn for_segment(
         &self,
-        segment_local_id: SegmentLocalId,
+        segment_local_id: SegmentOrdinal,
         _: &SegmentReader,
     ) -> tantivy::Result<SegmentDocsCollector> {
         Ok(SegmentDocsCollector { docs: vec!(), segment_local_id, limit: self.limit })
@@ -125,7 +126,7 @@ impl Collector for Docs {
         // 结果过多, 进行 resize
         start!(resize);
         if all.len() > self.limit {
-            all.resize(self.limit, (0.0f32, DocAddress(0, 0)));
+            all.resize(self.limit, (0.0f32, DocAddress::new(0, 0)));
         }
         end!(resize);
 
@@ -196,7 +197,7 @@ impl Collector for RankedDocs {
 
     fn for_segment(
         &self,
-        segment_local_id: SegmentLocalId,
+        segment_local_id: SegmentOrdinal,
         _: &SegmentReader,
     ) -> tantivy::Result<SegmentOrdDocsCollector> {
         Ok(SegmentOrdDocsCollector { docs: vec!(), segment_local_id, limit: self.limit })
@@ -233,7 +234,7 @@ impl Collector for RankedDocs {
 
         start!(resize);
         if all.len() > self.limit {
-            all.resize(self.limit, OrdDoc(0.0f32, DocAddress(0, 0)));
+            all.resize(self.limit, OrdDoc(0.0f32, DocAddress::new(0, 0)));
         }
         end!(resize);
 
@@ -251,7 +252,7 @@ impl Collector for RankedDocs {
 #[derive(Default)]
 pub struct SegmentOrdDocsCollector {
     docs: Vec<OrdDoc>,  // 存储收集到的文档和它们的评分
-    segment_local_id: SegmentLocalId,  // 索引段的本地 id
+    segment_local_id: SegmentOrdinal,  // 索引段的本地 id
     limit: usize  // 可收集最大文档的数量
 }
 // SegmentCollector trait 是 Tantivy 搜索库中用于收集单个索引段（segment）中的文档的接口
@@ -261,7 +262,7 @@ impl SegmentCollector for SegmentOrdDocsCollector {
     #[inline]
     fn collect(&mut self, doc_id: DocId, score: Score) {
         if self.docs.len() < self.limit {
-            self.docs.push(OrdDoc(score, DocAddress(self.segment_local_id, doc_id)));
+            self.docs.push(OrdDoc(score, DocAddress::new(self.segment_local_id, doc_id)));
         }
     }
 
@@ -281,7 +282,7 @@ impl SegmentCollector for SegmentOrdDocsCollector {
 #[derive(Default)]
 pub struct SegmentDocsCollector {
     docs: Vec<(Score, DocAddress)>,
-    segment_local_id: SegmentLocalId,
+    segment_local_id: SegmentOrdinal,
     limit: usize
 }
 
@@ -292,7 +293,7 @@ impl SegmentCollector for SegmentDocsCollector {
     #[inline]
     fn collect(&mut self, doc_id: DocId, score: Score) {
         if self.docs.len() < self.limit {
-            self.docs.push((score, DocAddress(self.segment_local_id, doc_id)));
+            self.docs.push((score, DocAddress::new(self.segment_local_id, doc_id)));
         }
     }
 
@@ -433,7 +434,8 @@ pub extern "C" fn tantivysearch_open_or_create_index(dir_ptr: *const c_char) -> 
         Ok(index) => index,
         Err(e) => {
             match e {
-                TantivyError::PathDoesNotExist(_) => {
+                // 匹配 OpenDirectoryError 枚举变体
+                TantivyError::OpenDirectoryError(OpenDirectoryError::DoesNotExist(_)) => {
                     println!("Creating index on {}", dir_str);
                     std::fs::create_dir_all(dir_str).expect("failed to create index dir");
                     let mut schema_builder = Schema::builder();
@@ -441,32 +443,42 @@ pub extern "C" fn tantivysearch_open_or_create_index(dir_ptr: *const c_char) -> 
                     schema_builder.add_u64_field("secondary_id", FAST);
                     schema_builder.add_text_field("body", TEXT);
                     let schema = schema_builder.build();
-                    Index::create_in_dir(dir_str, schema).expect("failed to create index")
-                }
+                    Index::create_in_dir(dir_str, schema).expect("Failed to create tantivy index")
+                },
+                // 处理 IO 错误
+                TantivyError::IoError(io_error) => {
+                    panic!("IO error occurred: {:?}", io_error);
+                },
+                // 处理其它所有类型的错误
                 _ => {
-                    panic!("this should not happen");
+                    panic!("An error occurred: {:?}", e);
                 }
             }
         }
     };
 
-    index.set_default_multithread_executor().expect("failed to create thread pool");
+    index.set_default_multithread_executor().expect("Failed to create thread pool");
+
     let reader = index
         .reader_builder()
         .reload_policy(ReloadPolicy::OnCommit)
-        .try_into().expect("failed to create reader");
+        .try_into().expect("Failed to create tantivy reader");
+    
     let writer = index
         .writer(1024 * 1024 * 1024)
-        .expect("failed to create writer");
+        .expect("Failed to create tantivy writer");
 
     // let mut policy = tantivy::merge_policy::LogMergePolicy::default();
     // policy.set_max_merge_size(3_000_000);
 
     // writer.set_merge_policy(Box::new(policy));
 
+    // 将 Box 类型的智能指针转换成为裸指针, 不会对它指向的内存进行析构
     Box::into_raw(Box::new(IndexRW { index, reader, writer, path: dir_str.to_string() }))
 }
 
+
+// 返回值包含两个 u64 向量, 可能代表主键和次键
 pub fn tantivysearch_search_impl(irw: *mut IndexRW, query_str: &str, limit: u64) -> Arc<(Vec<u64>, Vec<u64>)> {
     CACHE.resolve((irw as usize, query_str.to_string(), limit, false), move || {
         println!("Searching index for {} with limit {}", query_str, limit);
@@ -480,25 +492,34 @@ pub fn tantivysearch_search_impl(irw: *mut IndexRW, query_str: &str, limit: u64)
 
         let searcher = unsafe { (*irw).reader.searcher() };
         let segment_readers = searcher.segment_readers();
-        let ff_readers_primary: Vec<_> = segment_readers.iter().map(|seg_r| {
+
+        // 获得所有 SegmentReader 对应的 Column
+        let primary_columns: Vec<_> = segment_readers.iter().map(|seg_r| {
             let ffs = seg_r.fast_fields();
-            ffs.u64(primary_id).unwrap()
+            ffs.u64("primary_id").unwrap()
         }).collect();
-        let ff_readers_secondary: Vec<_> = segment_readers.iter().map(|seg_r| {
+        let secondary_columns: Vec<_> = segment_readers.iter().map(|seg_r| {
             let ffs = seg_r.fast_fields();
-            ffs.u64(secondary_id).unwrap()
+            ffs.u64("secondary_id").unwrap()
         }).collect();
 
 
+        // 创建 QueryParser, body 列被用来进行 search
         let query_parser = QueryParser::for_index(unsafe { &(*irw).index }, vec![body]);
+        // 解析 query
+        let query = query_parser.parse_query(query_str).expect("tantivy failed to parse query");
+        // 搜索 TopK 的 docs
+        let top_docs = searcher.search(&query, &Docs::with_limit(limit as usize)).expect("failed to search");
 
-        let query = query_parser.parse_query(query_str).expect("failed to parse query");
-        let docs = searcher.search(&query, &Docs::with_limit(limit as usize)).expect("failed to search");
-        let mut results: (Vec<_>, Vec<_>) = docs.into_par_iter().map(|(_score, doc_address)| {
-            let ff_reader_primary = &ff_readers_primary[doc_address.segment_ord() as usize];
-            let ff_reader_secondary = &ff_readers_secondary[doc_address.segment_ord() as usize];
-            let primary_id: u64 = ff_reader_primary.get(doc_address.doc());
-            let secondary_id: u64 = ff_reader_secondary.get(doc_address.doc());
+        let mut results: (Vec<_>, Vec<_>) = top_docs.into_par_iter().map(|(_score, doc_address)| {
+            // 确定 primary 和 secondary 所在的 Column
+            let primary_column = &primary_columns[doc_address.segment_ord as usize];
+            let secondary_column = &secondary_columns[doc_address.segment_ord as usize];
+
+            // 从 Column 内拿到存储的数据
+            // TODO 后续需要验证这里使用的 unwrap_or 的正确性, 是否在 Column 内无法找到的时候应该直接报错?
+            let primary_id: u64 = primary_column.values_for_doc(doc_address.doc_id).next().unwrap_or(0);
+            let secondary_id: u64 = secondary_column.values_for_doc(doc_address.doc_id).next().unwrap_or(0);
             (primary_id, secondary_id)
         }).unzip();
 
@@ -507,6 +528,8 @@ pub fn tantivysearch_search_impl(irw: *mut IndexRW, query_str: &str, limit: u64)
     })
 }
 
+// 返回值包含两个 u64 向量, 可能代表主键和次键
+// TODO  refactor
 pub fn tantivysearch_ranked_search_impl(irw: *mut IndexRW, query_str: &str, limit: u64) -> Arc<(Vec<u64>, Vec<u64>)> {
     CACHE.resolve((irw as usize, query_str.to_string(), limit, true), move || {
         println!("Searching index for {} with limit {} and ranking", query_str, limit);
@@ -520,25 +543,31 @@ pub fn tantivysearch_ranked_search_impl(irw: *mut IndexRW, query_str: &str, limi
 
         let searcher = unsafe { (*irw).reader.searcher() };
         let segment_readers = searcher.segment_readers();
-        let ff_readers_primary: Vec<_> = segment_readers.iter().map(|seg_r| {
+
+        // 获得所有 SegmentReader 对应的 Column
+        let primary_columns: Vec<_> = segment_readers.iter().map(|seg_r| {
             let ffs = seg_r.fast_fields();
-            ffs.u64(primary_id).unwrap()
+            ffs.u64("primary_id").unwrap()
         }).collect();
-        let ff_readers_secondary: Vec<_> = segment_readers.iter().map(|seg_r| {
+        let secondary_columns: Vec<_> = segment_readers.iter().map(|seg_r| {
             let ffs = seg_r.fast_fields();
-            ffs.u64(secondary_id).unwrap()
+            ffs.u64("secondary_id").unwrap()
         }).collect();
 
-
+        // 创建 QueryParser, body 列被用来进行 search
         let query_parser = QueryParser::for_index(unsafe { &(*irw).index }, vec![body]);
-
+        // 解析 query
         let query = query_parser.parse_query(query_str).expect("failed to parse query");
+        // 搜索 TopK 的 order docs
         let docs = searcher.search(&query, &RankedDocs::with_limit(limit as usize)).expect("failed to search");
         let mut results: (Vec<_>, Vec<_>) = docs.into_par_iter().map(|OrdDoc(_score, doc_address)| {
-            let ff_reader_primary = &ff_readers_primary[doc_address.segment_ord() as usize];
-            let ff_reader_secondary = &ff_readers_secondary[doc_address.segment_ord() as usize];
-            let primary_id: u64 = ff_reader_primary.get(doc_address.doc());
-            let secondary_id: u64 = ff_reader_secondary.get(doc_address.doc());
+            let primary_column = &primary_columns[doc_address.segment_ord as usize];
+            let secondary_column = &secondary_columns[doc_address.segment_ord as usize];
+            
+            // 从 Column 内拿到存储的数据
+            // TODO 后续需要验证这里使用的 unwrap_or 的正确性, 是否在 Column 内无法找到的时候应该直接报错?
+            let primary_id: u64 = primary_column.values_for_doc(doc_address.doc_id).next().unwrap_or(0);
+            let secondary_id: u64 = secondary_column.values_for_doc(doc_address.doc_id).next().unwrap_or(0);
             (primary_id, secondary_id)
         }).unzip();
 
