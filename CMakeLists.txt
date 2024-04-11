@@ -1,47 +1,112 @@
-# tantivy 构建方式
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CARGO_CMD cargo build)
-    set(TARGET_DIR "debug")
-else ()
-    set(CARGO_CMD cargo build --release)
-    set(TARGET_DIR "release")
-endif ()
+cmake_minimum_required(VERSION 3.22)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# tantivy 静态库
-set(LIBRARY_TANTIVY_SEARCH_FILE ${CMAKE_CURRENT_BINARY_DIR}/target/${TARGET_DIR}/libtantivy_search.a)
+project(TANTIVY_LIB)
 
-# 仅构建的时候执行
-add_custom_target(rs ALL
-COMMENT "Compiling TANTIVY_SEARCH module"
-COMMAND CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}/target ${CARGO_CMD}
-WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+set(SANITIZER "" CACHE STRING "Sanitizer to enable (address, thread, memory)")
 
-
-# 尝试查找 tantivy 静态库文件, 如果在构建目录中不存在, 则不会报错
-find_library(LIBRARY_TANTIVY_SEARCH NAMES LIBRARY_TANTIVY_SEARCH_FILE tantivy_search PATHS ${CMAKE_CURRENT_BINARY_DIR}/target/${TARGET_DIR} NO_DEFAULT_PATH)
-
-# 判断静态库 tantivy 是否存在
-if(LIBRARY_TANTIVY_SEARCH)
-  message(STATUS "tantivy library path is " ${LIBRARY_TANTIVY_SEARCH})
-else()
-  set(LIBRARY_TANTIVY_SEARCH "LIBRARY_TANTIVY_SEARCH-NOTFOUND")
-  message(STATUS "Library tantivy_search will be researched for at build time.")
+message(${SANITIZER})
+if(SANITIZER STREQUAL "address")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+    # set(CXXBRIDGE_CXXFLAGS "${CXXBRIDGE_CXXFLAGS} -fsanitize=address")
+    set(RUST_CXXFLAGS "${RUST_CXXFLAGS} -fsanitize=address")
+elseif(SANITIZER STREQUAL "thread")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -g -fno-omit-frame-pointer")
+    set(CXXBRIDGE_CXXFLAGS "${CXXBRIDGE_CXXFLAGS} -fsanitize=thread")
+    # set(RUST_CXXFLAGS "${RUST_CXXFLAGS} -Zsanitizer=thread")
+    set(RUST_CXXFLAGS "${RUST_CXXFLAGS} -fsanitize=thread")
+    # set(RUST_CXXFLAGS "${RUST_CXXFLAGS}")
+elseif(SANITIZER STREQUAL "memory")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=memory")
+    # set(CXXBRIDGE_CXXFLAGS "${CXXBRIDGE_CXXFLAGS} -fsanitize=memory")
+    set(RUST_CXXFLAGS "${RUST_CXXFLAGS} -fsanitize=memory")
 endif()
 
 
-find_path (INCLUDE_TANTIVY_SEARCH NAMES tantivy_search.h  PATHS ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_subdirectory(contrib ${CMAKE_CURRENT_BINARY_DIR}/contrib)
 
-
-if (LIBRARY_TANTIVY_SEARCH AND INCLUDE_TANTIVY_SEARCH)
-  set(CMAKE_REQUIRED_LIBRARIES ${LIBRARY_TANTIVY_SEARCH})
-  set(CMAKE_REQUIRED_INCLUDES ${INCLUDE_TANTIVY_SEARCH})
-  # 定义 tantivy 新的库目标
-  add_library (tantivy_search STATIC IMPORTED)
-  # 定义 tantivy 库目标的完整路径
-  set_property (TARGET tantivy_search PROPERTY IMPORTED_LOCATION  ${LIBRARY_TANTIVY_SEARCH})
-  # 定义其它目标链接到这个库时应当包含哪些目录
-  set_property (TARGET tantivy_search PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INCLUDE_TANTIVY_SEARCH})
-  message (STATUS "Using tantivysearch: ${INCLUDE_TANTIVY_SEARCH} : ${LIBRARY_TANTIVY_SEARCH}")
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(RUST_PROFILE release)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(RUST_PROFILE relwithdebinfo)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(RUST_PROFILE dev)
 else()
-  message (${RECONFIGURE_MESSAGE_LEVEL} "Can't find tantivy")
+    set(RUST_PROFILE release)
 endif()
+
+corrosion_import_crate(
+    MANIFEST_PATH "Cargo.toml"
+    PROFILE ${RUST_PROFILE}
+)
+
+set(rust_lib "tantivy_search")
+# set(CMAKE_CXX_FLAGS	" -std=c++11 -fsanitize=address -fsanitize-recover=all  -fsanitize=leak")
+# -Wno-dollar-in-identifier-extension: cxx bridge complies names with '$'
+# -Wno-unused-macros: unused CXXBRIDGE1_RUST_STRING
+set(CXXBRIDGE_CXXFLAGS "-Wno-dollar-in-identifier-extension -Wno-unused-macros")
+set(RUST_CXXFLAGS "${CXXBRIDGE_CXXFLAGS} ${RUST_CXXFLAGS}")
+message(STATUS "Config cxx-bridge, use RUST_CXXFLAGS: " ${RUST_CXXFLAGS})
+
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/.cargo/config.toml.in" "${CMAKE_CURRENT_SOURCE_DIR}/.cargo/config.toml" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/build.rs.in" "${CMAKE_CURRENT_SOURCE_DIR}/build.rs" @ONLY)
+
+
+set(cxx_bridge_binary_folder ${CMAKE_BINARY_DIR}/cargo/build/${Rust_CARGO_TARGET_CACHED}/cxxbridge)
+set(cxx_bridge_source_file "src/lib.rs")
+
+set(common_header ${cxx_bridge_binary_folder}/rust/cxx.h)
+# tantivy_search cxx header and source.
+set(tantivy_search_header ${cxx_bridge_binary_folder}/${rust_lib}/${cxx_bridge_source_file}.h)
+set(tantivy_search_source ${cxx_bridge_binary_folder}/${rust_lib}/${cxx_bridge_source_file}.cc)
+
+# get include path
+set(tantivy_search_include ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+message(STATUS "❄️ -> common_header: ${tantivy_search_header}")
+message(STATUS "❄️ -> tantivy_search header: ${tantivy_search_header}")
+message(STATUS "❄️ -> tantivy_search source: ${tantivy_search_source}")
+message(STATUS "❄️ -> tantivy_search include: ${tantivy_search_include}")
+
+add_custom_command(
+    OUTPUT
+    ${common_header}
+    ${tantivy_search_header}
+    ${tantivy_search_source}
+    COMMAND
+    DEPENDS ${rust_lib}-static
+    COMMENT "Fixing cmake to find source files"
+)
+
+
+add_library(${rust_lib}_cxxbridge
+    ${common_header}
+    ${skim_header}
+    ${skim_source}
+    ${tantivy_search_header}
+    ${tantivy_search_source}
+)
+# cxx bridge compiles such bindings
+set_target_properties(${rust_lib}_cxxbridge PROPERTIES COMPILE_FLAGS "${CXXBRIDGE_CXXFLAGS}")
+set_target_properties(${rust_lib}_cxxbridge PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(${rust_lib}_cxxbridge
+    PUBLIC
+    ${tantivy_search_include}
+)
+
+# Create total target with alias with given namespace
+add_library(${rust_lib}-total INTERFACE)
+target_link_libraries(${rust_lib}-total
+    INTERFACE
+    ${rust_lib}_cxxbridge
+    ${rust_lib}
+)
+
+# for end-user to link into project
+add_library(rust::${rust_lib} ALIAS ${rust_lib}-total)
+
+add_subdirectory(benchmark ${CMAKE_CURRENT_BINARY_DIR}/benchmark)
+add_subdirectory(tests ${CMAKE_CURRENT_BINARY_DIR}/tests)

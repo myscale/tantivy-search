@@ -1,0 +1,171 @@
+stages:
+  - BuildPackage
+  - Test
+  - Sanitizers
+
+.init-s3: &init-s3
+  - sed -i "s/SED_SECRET_ID_SED/$S3_SECRET_ID/g" /root/.cos.conf
+  - sed -i "s/SED_SECRET_KEY_SED/$S3_SECRET_KEY/g" /root/.cos.conf
+  - sed -i "s/SED_BUCKET_SED/$S3_BUCKET/g" /root/.cos.conf
+  - sed -i "s/SED_REGION_SED/$S3_REGION/g" /root/.cos.conf
+
+
+RelWithDebInfo:
+  stage: BuildPackage
+  image: mochix/ubuntu22.04_base:0.1.1
+  before_script:
+    - *init-s3
+    - wget https://mqdb-release-1253802058.cos.ap-beijing.myqcloud.com/tantivy_search_ci/cargo_registry.tar.gz
+    - mkdir -p cargo_cache/
+    - tar -xf cargo_registry.tar.gz -C cargo_cache
+    - du -h -d 0 cargo_cache/registry/
+    - rsync -a --ignore-existing cargo_cache/registry/ /root/.cargo/registry/
+  script:
+    - git submodule sync
+    - git submodule update --init --recursive
+    - mkdir -p build_packages
+    - mkdir -p packages
+    - >
+      cmake --no-warn-unused-cli
+      -DSANITIZER=none
+      -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo
+      -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE
+      -DCMAKE_C_COMPILER:FILEPATH=$(command -v clang-15)
+      -DCMAKE_CXX_COMPILER:FILEPATH=$(command -v clang++-15)
+      -S. -B./build_packages -G Ninja
+    - cmake --build ./build_packages --config RelWithDebInfo --target all
+    - cp ./build_packages/benchmark/tantivy_search_benchmark ./packages
+    - cp ./build_packages/libtantivy_search.a ./packages
+    - cp ./build_packages/tests/throughput/throughput_test ./packages
+    - cp ./build_packages/tests/unit_test/unit_tests ./packages
+    - tar -czf packages.tar.gz ./packages
+    - md5sum ./packages/*
+    - md5sum packages.tar.gz
+    - ls -lh packages.tar.gz ./packages/*
+  tags:
+    - self-host
+  after_script:
+    - rsync -a --ignore-existing /root/.cargo/registry/ cargo_cache/registry/
+    - du -h -d 0 cargo_cache/registry/
+    - cd cargo_cache/
+    - tar -czf cargo_registry.tar.gz registry/
+    - coscmd upload cargo_registry.tar.gz tantivy_search_ci/
+  artifacts:
+    name: "packages"
+    expire_in: 2 week
+    paths:
+      - packages.tar.gz
+
+
+UnitTest:
+  stage: Test
+  needs:
+    - job: RelWithDebInfo
+      artifacts: true
+  image: mochix/ubuntu22.04_base:0.1.1
+  script:
+    - tar -zxf packages.tar.gz
+    - ./packages/unit_tests --gtest_output=xml:unit_test.xml
+  artifacts:
+    when: always
+    paths:
+      - unit_test.xml
+    reports:
+      junit: unit_test.xml
+  
+CodeCoverage:
+  stage: Test
+  before_script:
+    - *init-s3
+    - wget https://mqdb-release-1253802058.cos.ap-beijing.myqcloud.com/tantivy_search_ci/cargo_registry.tar.gz
+    - mkdir -p cargo_cache/
+    - tar -xf cargo_registry.tar.gz -C cargo_cache
+    - du -h -d 0 cargo_cache/registry/
+    - rsync -a --ignore-existing cargo_cache/registry/ /root/.cargo/registry/
+  image: mochix/ubuntu22.04_base:0.1.1
+  script:
+    - git submodule sync
+    - git submodule update --init --recursive
+    - export CARGO_INCREMENTAL=0
+    - export RUSTFLAGS="-C instrument-coverage"
+    - export LLVM_PROFILE_FILE="tantivy_search-%p-%m.profraw"
+    - cargo +nightly-2023-12-02 clean
+    - cargo +nightly-2023-12-02 test
+    - llvm-profdata-15 merge -sparse ./*.profraw -o tantivy_search.profdata
+    - |
+      BINARY_FILE=$(file target/debug/deps/tantivy_search* | grep 'executable' | cut -d: -f1 | head -n 1)
+      llvm-cov-15 export -format=lcov ${BINARY_FILE} -instr-profile=tantivy_search.profdata --ignore-filename-regex='contrib/' --ignore-filename-regex='rustc.*' --ignore-filename-regex='.cargo/' > tantivy_search.lcov
+    - lcov_cobertura tantivy_search.lcov -o cobertura.xml
+    - |
+      LINE_RATE=$(grep 'line-rate' cobertura.xml | sed -n 's/.*line-rate="\([^"]*\)".*/\1/p' | head -n 1)
+      COVERAGE=$(echo "$LINE_RATE * 100" | bc -l)
+      echo "CodeCoverage: $COVERAGE%"
+  after_script:
+    - rm -rf *.profraw *.profdata *.lcov target
+    - rsync -a --ignore-existing /root/.cargo/registry/ cargo_cache/registry/
+    - du -h -d 0 cargo_cache/registry/
+    - cd cargo_cache/
+    - tar -czf cargo_registry.tar.gz registry/
+    - coscmd upload cargo_registry.tar.gz tantivy_search_ci/
+  coverage: '/CodeCoverage: (\d+\.\d+)%/'
+  artifacts:
+    paths:
+      - cobertura.xml
+    reports:
+      cobertura: cobertura.xml
+
+
+Benchmark:
+  stage: Test
+  needs:
+    - job: RelWithDebInfo
+      artifacts: true
+  image: mochix/ubuntu22.04_base:0.1.1
+  script:
+    - if [ ! -f scripts/query_terms.json ] || [ ! -f scripts/wiki_560w.json ]; then bash scripts/download_datasets.sh; fi
+    - tar -zxvf packages.tar.gz
+    - ./packages/tantivy_search_benchmark --qtp=scripts/query_terms.json --dp=scripts/wiki_560w.json --ip=./temp --sbi=false | tee Benchmark.txt
+    - md5sum Benchmark.txt
+  tags:
+    - self-host
+  cache:
+    key: ${CI_JOB_NAME}-datasets
+    paths:
+      - scripts/query_terms.json
+      - scripts/wiki_560w.json
+    policy: pull-push
+  artifacts:
+    name: "Benchmark"
+    expire_in: 2 week
+    paths:
+      - Benchmark.txt
+
+  
+# AddressSanitizer:
+#   stage: Sanitizers
+#   # needs:
+#   #   - job: Benchmark
+#   #     artifacts: false
+#   image: mochix/ubuntu22.04_base:0.1.1
+#   cache:
+#     key: ${CI_JOB_NAME}-cargo
+#     paths:
+#       - cargo_cache/registry/
+#     policy: pull-push
+#   before_script:
+#     - mkdir -p cargo_cache/registry/
+#     - du -h -d 0 cargo_cache/registry/
+#     - rsync -a --ignore-existing cargo_cache/registry/ /root/.cargo/registry/
+#   script:
+#     - git submodule sync
+#     - git submodule update --init --recursive
+#     - rustup default nightly-2023-12-02
+#     - export RUST_CXXFLAGS="-fsanitize=address"
+#     - export RUSTFLAGS="-Zsanitizer=address"
+#     - cmake --no-warn-unused-cli -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DCMAKE_C_COMPILER:FILEPATH=$(command -v clang-15) -DCMAKE_CXX_COMPILER:FILEPATH=$(command -v clang++-15) -S. -B./asan_package -G Ninja
+#     - cmake --build ./asan_package --config RelWithDebInfo --target all
+#     - ASAN_OPTIONS=verbosity=1:symbolize=1 ./asan_package/benchmark/tantivy_search_benchmark --qtp=scripts/query_terms.json --dp=scripts/wiki_560w.json --ip=./temp --sbi=false
+#   # artifacts:
+#   #   when: always
+#   #   paths:
+#   #     - sanitizer_output/

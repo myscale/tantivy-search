@@ -1,0 +1,28 @@
+[submodule "contrib/json"]
+	path = contrib/json
+	url = https://github.com/nlohmann/json.git
+[submodule "contrib/easylogging"]
+	path = contrib/easylogging
+	url = https://github.com/abumq/easyloggingpp.git
+
+[submodule "contrib/boost"]
+	path = contrib/boost
+	url = https://github.com/ClickHouse/boost
+[submodule "contrib/benchmark"]
+	path = contrib/benchmark
+	url = https://github.com/google/benchmark.git
+[submodule "contrib/google_test"]
+	path = contrib/google_test
+	url = https://github.com/google/googletest.git
+[submodule "contrib/tantivy"]
+	path = contrib/tantivy
+	url = git@git.moqi.ai:rust/tantivy.git
+[submodule "contrib/cang-jie"]
+	path = contrib/cang-jie
+	url = git@git.moqi.ai:rust/cang-jie.git
+[submodule "contrib/corrosion-rs"]
+	path = contrib/corrosion-rs
+	url = https://github.com/corrosion-rs/corrosion.git
+[submodule "contrib/croaring"]
+	path = contrib/croaring
+	url = https://github.com/RoaringBitmap/CRoaring
