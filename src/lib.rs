@@ -1,4 +1,7 @@
+use ffi::DocWithFreq;
+use ffi::FieldTokenNums;
 use ffi::RowIdWithScore;
+use ffi::Statistics;
 use std::cmp::Ordering;
 
 mod common;
@@ -26,6 +29,27 @@ pub mod ffi {
         pub seg_id: u32,
         pub doc_id: u32,
         pub docs: Vec<String>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct DocWithFreq {
+        pub term_str: String,
+        pub field_id: u32,
+        pub doc_freq: u64,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct FieldTokenNums {
+        pub field_id: u32,
+        pub field_total_tokens: u64,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct Statistics {
+        pub docs_freq: Vec<DocWithFreq>,
+        // pub total_num_tokens: Vec<FieldTokenNums>,
+        pub total_num_tokens: u64,
+        pub total_num_docs: u64,
     }
 
     extern "Rust" {
@@ -203,13 +227,31 @@ pub mod ffi {
         /// - `topk`: only return top k related results.
         /// - `u8_aived_bitmap`: alived rowIds given by u8 bitmap.
         /// - `query_with_filter`: whether use alived_bitmap or not.
+        /// - `statistics`: for multi parts bm25 statistics info.
         pub fn ffi_bm25_search(
             index_path: &CxxString,
             sentence: &CxxString,
             topk: u32,
             u8_aived_bitmap: &CxxVector<u8>,
             query_with_filter: bool,
+            statistics: &Statistics,
         ) -> Vec<RowIdWithScore>;
+
+        /// Get doc freq for current part.
+        /// arguments:
+        /// - `index_path`: index directory.
+        /// - `sentence`: query_str.
+        pub fn ffi_get_doc_freq(index_path: &CxxString, sentence: &CxxString) -> Vec<DocWithFreq>;
+
+        /// Get total num docs for current part.
+        /// arguments:
+        /// - `index_path`: index directory.
+        pub fn ffi_get_total_num_docs(index_path: &CxxString) -> u64;
+
+        /// Get total num tokens for current part.
+        /// arguments:
+        /// - `index_path`: index directory.
+        pub fn ffi_get_total_num_tokens(index_path: &CxxString) -> u64;
     }
 }
 
@@ -248,6 +290,37 @@ impl PartialEq for RowIdWithScore {
 }
 
 impl Eq for RowIdWithScore {}
+
+#[allow(dead_code)]
+impl DocWithFreq {
+    fn new(term_str: String, field_id: u32, doc_freq: u64) -> Self {
+        DocWithFreq {
+            term_str,
+            field_id,
+            doc_freq,
+        }
+    }
+}
+
+#[allow(dead_code)]
+impl Statistics {
+    fn new(docs_freq: Vec<DocWithFreq>, total_num_tokens: u64, total_num_docs: u64) -> Self {
+        Statistics {
+            docs_freq,
+            total_num_tokens,
+            total_num_docs,
+        }
+    }
+}
+#[allow(dead_code)]
+impl FieldTokenNums {
+    fn new(field_id: u32, field_total_tokens: u64) -> Self {
+        FieldTokenNums {
+            field_id,
+            field_total_tokens,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
