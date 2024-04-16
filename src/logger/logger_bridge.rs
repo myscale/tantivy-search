@@ -54,7 +54,7 @@ impl TantivySearchLogger {
     }
 
     pub fn trigger_logger_callback(level: i8, message: String, callback: LogCallback) {
-        if LOG_CALLBACK.get().is_none(){
+        if LOG_CALLBACK.get().is_none() {
             return;
         }
         let thread_id: String = Self::get_thread_id();
