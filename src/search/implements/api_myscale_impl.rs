@@ -7,6 +7,7 @@ use tantivy::schema::TextFieldIndexing;
 use tantivy::tokenizer::BoxTokenStream;
 use tantivy::tokenizer::TextAnalyzer;
 use tantivy::Term;
+use std::collections::HashSet;
 
 use crate::common::errors::TantivySearchError;
 use crate::ffi::DocWithFreq;
@@ -87,7 +88,7 @@ pub fn bm25_search(
         total_num_docs: statistics.total_num_docs,
     };
 
-    TRACE!(function:"bm25_search", "use MultiPartsStatistics {:?}", multi_parts_statistics);
+    DEBUG!(function:"bm25_search", "index_path:[{:?}], use MultiPartsStatistics[{:?}]", index_path, multi_parts_statistics);
 
     let _ = searcher.update_multi_parts_statistics(multi_parts_statistics);
 
@@ -113,7 +114,7 @@ pub fn get_doc_freq(
     let searcher = index_reader_bridge.reader.searcher();
 
     let schema: Schema = index_reader_bridge.index.schema();
-    let mut terms: Vec<Term> = Vec::new();
+    let mut terms: HashSet<Term> = HashSet::new();
 
     for (col_field, col_field_entry) in schema.fields() {
         let field_type = col_field_entry.field_type();
@@ -138,7 +139,7 @@ pub fn get_doc_freq(
             let mut token_stream: BoxTokenStream<'_> = text_analyzer.token_stream(sentence);
             token_stream.process(&mut |token| {
                 let term: Term = Term::from_field_text(col_field, &token.text);
-                terms.push(term);
+                terms.insert(term);
             });
             // MyScale Only Support single column.
             break;
@@ -155,9 +156,9 @@ pub fn get_doc_freq(
             term.field().field_id(),
             doc_freq,
         );
-        TRACE!(function:"get_doc_freq", "{:?}", doc_with_freq);
         doc_with_freq_vector.push(doc_with_freq);
     }
+    DEBUG!(function:"get_doc_freq", "index_path:[{:?}], doc_with_freq_vector:[{:?}]", index_path, doc_with_freq_vector);
     Ok(doc_with_freq_vector)
 }
 
@@ -173,7 +174,7 @@ pub fn get_total_num_docs(index_path: &str) -> Result<u64, TantivySearchError> {
     let total_num_docs = searcher
         .total_num_docs()
         .map_err(|e| TantivySearchError::TantivyError(e))?;
-    DEBUG!(function:"get_total_num_docs", "total_num_docs is {}", total_num_docs);
+    DEBUG!(function:"get_total_num_docs", "index_path:[{:?}], total_num_docs is:[{:?}]", index_path, total_num_docs);
     Ok(total_num_docs)
 }
 
