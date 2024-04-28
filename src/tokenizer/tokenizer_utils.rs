@@ -285,7 +285,7 @@ impl ToeknizerUtils {
                 ColumnTokenizer::Chinese {
                     jieba,
                     mode,
-                    hnm,
+                    hmm,
                     store_doc,
                     // length_limit,
                 } => {
@@ -298,8 +298,8 @@ impl ToeknizerUtils {
                     let tokenizer_option: TokenizerOption = match mode.as_str() {
                         "all" => TokenizerOption::All,
                         "unicode" => TokenizerOption::Unicode,
-                        "default" => TokenizerOption::Default { hmm: *hnm },
-                        "search" => TokenizerOption::ForSearch { hmm: *hnm },
+                        "default" => TokenizerOption::Default { hmm: *hmm },
+                        "search" => TokenizerOption::ForSearch { hmm: *hmm },
                         _ => TokenizerOption::Unicode, // default option
                     };
 
