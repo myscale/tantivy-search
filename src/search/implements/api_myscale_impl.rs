@@ -17,7 +17,6 @@ use crate::search::bridge::index_reader_bridge::IndexReaderBridge;
 use crate::RowIdWithScore;
 use crate::DEBUG;
 use crate::FFI_INDEX_SEARCHER_CACHE;
-use crate::TRACE;
 use crate::{common::constants::LOG_CALLBACK, ERROR};
 use std::collections::HashMap;
 use std::sync::Arc;
