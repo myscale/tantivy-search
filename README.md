@@ -1,12 +1,12 @@
 # Tantivy Search
 
-[![coverage](https://git.moqi.ai/mqdb/tantivy-search/badges/tantivy_0.21.1/coverage.svg?job=CodeCoverage)]()
-[![pipeline status](https://git.moqi.ai/mqdb/tantivy-search/badges/tantivy_0.21.1/pipeline.svg)](https://git.moqi.ai/mqdb/tantivy-search/-/pipelines?page=1&scope=all&ref=tantivy_0.21.1)
+[![coverage](https://git.moqi.ai/mqdb/tantivy-search/badges/master/coverage.svg?job=CodeCoverage)]()
+[![pipeline status](https://git.moqi.ai/mqdb/tantivy-search/badges/master/pipeline.svg)](https://git.moqi.ai/mqdb/tantivy-search/-/pipelines?page=1&scope=all&ref=master)
 [![codecov](https://codecov.io/gh/MochiXu/tantivy-search/graph/badge.svg?token=DRUQZXPYRP)](https://codecov.io/gh/MochiXu/tantivy-search)
 
 
 
-This library is designed to integrate [tantivy](https://github.com/quickwit-oss/tantivy/) into [ClickHouse](https://github.com/ClickHouse/ClickHouse) and [MyScale](https://git.moqi.ai/mqdb/ClickHouse/).
+This library is designed to integrate [tantivy](https://github.com/quickwit-oss/tantivy/) into [ClickHouse](https://github.com/ClickHouse/ClickHouse) and [MyScaleDB](https://github.com/myscale/myscaledb).
 
 ## Development
 
