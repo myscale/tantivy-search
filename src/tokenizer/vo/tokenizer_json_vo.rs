@@ -89,6 +89,8 @@ pub enum ColumnTokenizer {
         hmm: bool,
         #[serde(default)]
         store_doc: bool,
+        #[serde(default)]
+        case_sensitive: bool,
     },
 }
 

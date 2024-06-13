@@ -287,6 +287,7 @@ impl ToeknizerUtils {
                     mode,
                     hmm,
                     store_doc,
+                    case_sensitive,
                     // length_limit,
                 } => {
                     let jieba_mode: Jieba = match jieba.as_str() {
@@ -303,13 +304,15 @@ impl ToeknizerUtils {
                         _ => TokenizerOption::Unicode, // default option
                     };
 
-                    let builder = TextAnalyzer::builder(CangJieTokenizer {
+                    let mut builder = TextAnalyzer::builder(CangJieTokenizer {
                         worker: Arc::new(jieba_mode),
                         option: tokenizer_option,
                     })
                     .dynamic();
                     // builder = builder.filter_dynamic(RemoveLongFilter::limit(*length_limit));
-
+                    if *case_sensitive == false {
+                        builder = builder.filter_dynamic(LowerCaser);
+                    }
                     let tokenizer_config = TokenizerConfig::new(
                         TokenizerType::Chinese("chinese".to_string()),
                         builder.build(),
