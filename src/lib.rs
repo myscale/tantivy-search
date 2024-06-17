@@ -234,6 +234,7 @@ pub mod ffi {
             topk: u32,
             u8_aived_bitmap: &CxxVector<u8>,
             query_with_filter: bool,
+            operator_or: bool,
             statistics: &Statistics,
         ) -> Vec<RowIdWithScore>;
 

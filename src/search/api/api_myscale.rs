@@ -19,6 +19,7 @@ pub fn ffi_bm25_natural_language_search(
     topk: u32,
     u8_aived_bitmap: &CxxVector<u8>,
     query_with_filter: bool,
+    operator_or: bool,
     statistics: &Statistics,
 ) -> Vec<RowIdWithScore> {
     let index_path: String = match CXX_STRING_CONERTER.convert(index_path) {
@@ -51,6 +52,7 @@ pub fn ffi_bm25_natural_language_search(
         topk,
         &u8_aived_bitmap,
         query_with_filter,
+        operator_or,
         statistics,
         false,
     ) {

@@ -28,6 +28,7 @@ pub struct BM25NaturalLanguageStrategy<'a> {
     pub u8_aived_bitmap: &'a Vec<u8>,
     pub query_with_filter: &'a bool,
     pub need_doc: &'a bool,
+    pub operation_or: &'a bool,
 }
 
 impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25NaturalLanguageStrategy<'a> {
@@ -53,7 +54,10 @@ impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25NaturalLanguageStrategy<'a> 
             top_docs_collector = top_docs_collector.with_alive(Arc::new(alive_bitmap));
         }
 
-        let query_parser: QueryParser = QueryParser::for_index(searcher.index(), fields);
+        let mut query_parser: QueryParser = QueryParser::for_index(searcher.index(), fields);
+        if !*self.operation_or {
+            query_parser.set_conjunction_by_default();
+        }
         let text_query: Box<dyn Query> = query_parser.parse_query(self.sentence).map_err(
             |e: QueryParserError| {
                 ERROR!(function:"BM25NaturalLanguageStrategy", "Error when parse: {}. {}", self.sentence, e);
