@@ -96,6 +96,7 @@ pub fn bm25_natural_language_search(
     topk: u32,
     u8_aived_bitmap: &Vec<u8>,
     query_with_filter: bool,
+    operation_or: bool,
     statistics: &Statistics,
     need_doc: bool,
 ) -> Result<Vec<RowIdWithScore>, TantivySearchError> {
@@ -106,6 +107,7 @@ pub fn bm25_natural_language_search(
         u8_aived_bitmap,
         query_with_filter: &query_with_filter,
         need_doc: &need_doc,
+        operation_or: &operation_or,
     };
 
     bm25_inner_search(index_path, statistics, &bm25_natural_language_query)
@@ -118,7 +120,7 @@ pub fn bm25_standard_search(
     topk: u32,
     u8_aived_bitmap: &Vec<u8>,
     query_with_filter: bool,
-    operator_or: bool,
+    operation_or: bool,
     statistics: &Statistics,
     need_doc: bool,
 ) -> Result<Vec<RowIdWithScore>, TantivySearchError> {
@@ -129,7 +131,7 @@ pub fn bm25_standard_search(
         query_with_filter: &query_with_filter,
         u8_aived_bitmap,
         need_doc: &need_doc,
-        operation_or: &operator_or,
+        operation_or: &operation_or,
     };
 
     bm25_inner_search(index_path, statistics, &bm25_standard_query)

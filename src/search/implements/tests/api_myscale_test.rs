@@ -215,6 +215,7 @@ mod tests {
             topk,
             u8_alive_bitmap,
             use_filter,
+            true,
             statistics,
             need_docs,
         )

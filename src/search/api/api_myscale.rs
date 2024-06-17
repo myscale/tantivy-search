@@ -13,68 +13,21 @@ use crate::{common::constants::LOG_CALLBACK, ERROR};
 use cxx::CxxString;
 use cxx::CxxVector;
 
-pub fn ffi_bm25_natural_language_search(
+
+pub fn ffi_bm25_search(
     index_path: &CxxString,
     sentence: &CxxString,
     topk: u32,
     u8_aived_bitmap: &CxxVector<u8>,
     query_with_filter: bool,
-    statistics: &Statistics,
-) -> Vec<RowIdWithScore> {
-    let index_path: String = match CXX_STRING_CONERTER.convert(index_path) {
-        Ok(path) => path,
-        Err(e) => {
-            ERROR!(function: "ffi_bm25_natural_language_search", "Can't convert 'index_path', message: {}", e);
-            return Vec::new();
-        }
-    };
-
-    let sentence: String = match CXX_STRING_CONERTER.convert(sentence) {
-        Ok(q) => q,
-        Err(e) => {
-            ERROR!(function: "ffi_bm25_natural_language_search", "Can't convert 'sentence', message: {}", e);
-            return Vec::new();
-        }
-    };
-
-    let u8_aived_bitmap: Vec<u8> = match cxx_vector_converter::<u8>().convert(u8_aived_bitmap) {
-        Ok(bitmap) => bitmap,
-        Err(e) => {
-            ERROR!(function: "ffi_bm25_natural_language_search", "Can't convert vector 'u8_aived_bitmap', message: {}", e);
-            return Vec::new();
-        }
-    };
-
-    match bm25_natural_language_search(
-        &index_path,
-        &sentence,
-        topk,
-        &u8_aived_bitmap,
-        query_with_filter,
-        statistics,
-        false,
-    ) {
-        Ok(results) => results,
-        Err(e) => {
-            ERROR!(function: "ffi_bm25_natural_language_search", "Error performing BM25 search with statistics: {}", e);
-            Vec::new()
-        }
-    }
-}
-
-pub fn ffi_bm25_standard_search(
-    index_path: &CxxString,
-    sentence: &CxxString,
-    topk: u32,
-    u8_aived_bitmap: &CxxVector<u8>,
-    query_with_filter: bool,
+    enable_nlq: bool,
     operator_or: bool,
     statistics: &Statistics,
 ) -> Vec<RowIdWithScore> {
     let index_path: String = match CXX_STRING_CONERTER.convert(index_path) {
         Ok(path) => path,
         Err(e) => {
-            ERROR!(function: "ffi_bm25_standard_search", "Can't convert 'index_path', message: {}", e);
+            ERROR!(function: "ffi_bm25_search", "Can't convert 'index_path', message: {}", e);
             return Vec::new();
         }
     };
@@ -82,7 +35,7 @@ pub fn ffi_bm25_standard_search(
     let sentence: String = match CXX_STRING_CONERTER.convert(sentence) {
         Ok(q) => q,
         Err(e) => {
-            ERROR!(function: "ffi_bm25_standard_search", "Can't convert 'sentence', message: {}", e);
+            ERROR!(function: "ffi_bm25_search", "Can't convert 'sentence', message: {}", e);
             return Vec::new();
         }
     };
@@ -90,25 +43,44 @@ pub fn ffi_bm25_standard_search(
     let u8_aived_bitmap: Vec<u8> = match cxx_vector_converter::<u8>().convert(u8_aived_bitmap) {
         Ok(bitmap) => bitmap,
         Err(e) => {
-            ERROR!(function: "ffi_bm25_standard_search", "Can't convert vector 'u8_aived_bitmap', message: {}", e);
+            ERROR!(function: "ffi_bm25_search", "Can't convert vector 'u8_aived_bitmap', message: {}", e);
             return Vec::new();
         }
     };
 
-    match bm25_standard_search(
-        &index_path,
-        &sentence,
-        topk,
-        &u8_aived_bitmap,
-        query_with_filter,
-        operator_or,
-        statistics,
-        false,
-    ) {
-        Ok(results) => results,
-        Err(e) => {
-            ERROR!(function: "ffi_bm25_standard_search", "Error performing BM25 standard search with statistics: {}", e);
-            Vec::new()
+    if enable_nlq {
+        match bm25_natural_language_search(
+            &index_path,
+            &sentence,
+            topk,
+            &u8_aived_bitmap,
+            query_with_filter,
+            operator_or,
+            statistics,
+            false,
+        ) {
+            Ok(results) => results,
+            Err(e) => {
+                ERROR!(function: "ffi_bm25_natural_language_search", "Error performing BM25 natural language search with statistics: {}", e);
+                Vec::new()
+            }
+        }
+    }else {
+        match bm25_standard_search(
+            &index_path,
+            &sentence,
+            topk,
+            &u8_aived_bitmap,
+            query_with_filter,
+            operator_or,
+            statistics,
+            false,
+        ) {
+            Ok(results) => results,
+            Err(e) => {
+                ERROR!(function: "ffi_bm25_standard_search", "Error performing BM25 standard search with statistics: {}", e);
+                Vec::new()
+            }
         }
     }
 }
