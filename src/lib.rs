@@ -220,7 +220,7 @@ pub mod ffi {
             pattern: &CxxString,
         ) -> Vec<u8>;
 
-        /// Execute a regex query and return rowIds u8 bitmap.
+        /// Execute a bm25 query with natural language search enabled.
         /// arguments:
         /// - `index_path`: index directory.
         /// - `sentence`: from ClickHouse TextSearch function.
@@ -228,12 +228,31 @@ pub mod ffi {
         /// - `u8_aived_bitmap`: alived rowIds given by u8 bitmap.
         /// - `query_with_filter`: whether use alived_bitmap or not.
         /// - `statistics`: for multi parts bm25 statistics info.
-        pub fn ffi_bm25_search(
+        pub fn ffi_bm25_natural_language_search(
             index_path: &CxxString,
             sentence: &CxxString,
             topk: u32,
             u8_aived_bitmap: &CxxVector<u8>,
             query_with_filter: bool,
+            statistics: &Statistics,
+        ) -> Vec<RowIdWithScore>;
+
+        /// Execute a bm25 query with natural language search disabled.
+        /// arguments:
+        /// - `index_path`: index directory.
+        /// - `sentence`: from ClickHouse TextSearch function.
+        /// - `topk`: only return top k related results.
+        /// - `u8_aived_bitmap`: alived rowIds given by u8 bitmap.
+        /// - `query_with_filter`: whether use alived_bitmap or not.
+        /// - `operator_or`: if true, use `OR` combine all terms, otherwise use `AND`.
+        /// - `statistics`: for multi parts bm25 statistics info.
+        pub fn ffi_bm25_standard_search(
+            index_path: &CxxString,
+            sentence: &CxxString,
+            topk: u32,
+            u8_aived_bitmap: &CxxVector<u8>,
+            query_with_filter: bool,
+            operator_or: bool,
             statistics: &Statistics,
         ) -> Vec<RowIdWithScore>;
 

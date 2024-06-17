@@ -131,59 +131,59 @@ TEST_F(BoundaryFFiSearchTest, ffiQuerySentenceWithRangeNullptrParameter) {
 TEST_F(BoundaryFFiSearchTest, ffiBM25Search) {
     for (size_t i = 0; i < 100; i++)
     {
-        ASSERT_NO_THROW(ffi_bm25_search(indexDirectory, generateRandomNormalString(i), 10, {}, false));
-        ASSERT_NO_THROW(ffi_bm25_search(indexDirectory, generateRandomNormalString(i), 1000000, {}, false));
-        ASSERT_NO_THROW(ffi_bm25_search(indexDirectory, generateRandomNormalString(i), 10, {}, false));
-        ASSERT_NO_THROW(ffi_bm25_search(indexDirectory, generateRandomNormalString(i), 100000, {}, false));
-        ASSERT_NO_THROW(ffi_bm25_search(indexDirectory, generateRandomNormalString(i), 100000, {}, true));
-        ASSERT_NO_THROW(ffi_bm25_search(indexDirectory, generateRandomNormalString(i), 10, {255, 255}, true));
+        ASSERT_NO_THROW(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(i), 10, {}, false));
+        ASSERT_NO_THROW(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(i), 1000000, {}, false));
+        ASSERT_NO_THROW(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(i), 10, {}, false));
+        ASSERT_NO_THROW(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(i), 100000, {}, false));
+        ASSERT_NO_THROW(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(i), 100000, {}, true));
+        ASSERT_NO_THROW(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(i), 10, {255, 255}, true));
     }
 }
 
 TEST_F(BoundaryFFiSearchTest, ffiBM25SearchNoReader) {
     ASSERT_TRUE(ffi_free_index_reader(indexDirectory));
 
-    ASSERT_TRUE(ffi_bm25_search(indexDirectory, generateRandomNormalString(100), 10, {}, false).size()==0);
-    ASSERT_TRUE(ffi_bm25_search(indexDirectory, generateRandomNormalString(100), 1000000, {}, false).size()==0);
-    ASSERT_TRUE(ffi_bm25_search(indexDirectory, generateRandomNormalString(100), 10, {255, 255, 255}, true).size()==0);
-    ASSERT_TRUE(ffi_bm25_search(indexDirectory, generateRandomNormalString(100), 100000, {255, 255, 255}, false).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(100), 10, {}, false).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(100), 1000000, {}, false).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(100), 10, {255, 255, 255}, true).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(100), 100000, {255, 255, 255}, false).size()==0);
 
     ASSERT_TRUE(ffi_load_index_reader(indexDirectory));
     
-    ASSERT_FALSE(ffi_bm25_search(indexDirectory, generateRandomNormalString(100), 10, {}, false).size()==0);
-    ASSERT_FALSE(ffi_bm25_search(indexDirectory, generateRandomNormalString(100), 1000000, {}, false).size()==0);
-    ASSERT_FALSE(ffi_bm25_search(indexDirectory, generateRandomNormalString(100), 10, {255, 255, 255}, true).size()==0);
-    ASSERT_FALSE(ffi_bm25_search(indexDirectory, generateRandomNormalString(100), 100000, {255, 255, 255}, false).size()==0);
+    ASSERT_FALSE(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(100), 10, {}, false).size()==0);
+    ASSERT_FALSE(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(100), 1000000, {}, false).size()==0);
+    ASSERT_FALSE(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(100), 10, {255, 255, 255}, true).size()==0);
+    ASSERT_FALSE(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(100), 100000, {255, 255, 255}, false).size()==0);
 
     ASSERT_TRUE(ffi_free_index_reader(indexDirectory));
 }
 
 TEST_F(BoundaryFFiSearchTest, ffiBM25SearchNoIndex) {
-    ASSERT_TRUE(ffi_bm25_search(indexDirectoryNotExists, generateRandomNormalString(100), 10, {}, false).size()==0);
-    ASSERT_TRUE(ffi_bm25_search(indexDirectoryNotExists, generateRandomNormalString(100), 1000000, {}, false).size()==0);
-    ASSERT_TRUE(ffi_bm25_search(indexDirectoryNotExists, generateRandomNormalString(100), 10, {255, 255, 255}, true).size()==0);
-    ASSERT_TRUE(ffi_bm25_search(indexDirectoryNotExists, generateRandomNormalString(100), 100000, {255, 255, 255}, false).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexDirectoryNotExists, generateRandomNormalString(100), 10, {}, false).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexDirectoryNotExists, generateRandomNormalString(100), 1000000, {}, false).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexDirectoryNotExists, generateRandomNormalString(100), 10, {255, 255, 255}, true).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexDirectoryNotExists, generateRandomNormalString(100), 100000, {255, 255, 255}, false).size()==0);
 }
 
 TEST_F(BoundaryFFiSearchTest, ffiBM25SearchEmptyIndex) {
-    ASSERT_TRUE(ffi_bm25_search(indexEmptyDirectory, generateRandomNormalString(100), 10, {}, false).size()==0);
-    ASSERT_TRUE(ffi_bm25_search(indexEmptyDirectory, generateRandomNormalString(100), 1000000, {}, false).size()==0);
-    ASSERT_TRUE(ffi_bm25_search(indexEmptyDirectory, generateRandomNormalString(100), 10, {255, 255, 255}, true).size()==0);
-    ASSERT_TRUE(ffi_bm25_search(indexEmptyDirectory, generateRandomNormalString(100), 100000, {255, 255, 255}, false).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexEmptyDirectory, generateRandomNormalString(100), 10, {}, false).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexEmptyDirectory, generateRandomNormalString(100), 1000000, {}, false).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexEmptyDirectory, generateRandomNormalString(100), 10, {255, 255, 255}, true).size()==0);
+    ASSERT_TRUE(ffi_bm25_natural_language_search(indexEmptyDirectory, generateRandomNormalString(100), 100000, {255, 255, 255}, false).size()==0);
 }
 
 TEST_F(BoundaryFFiSearchTest, ffiBM25SearchWithFilter) {
     for (size_t i = 0; i < 100; i++)
     {
-        ASSERT_NO_THROW(ffi_bm25_search(indexDirectory, generateRandomNormalString(i), 10, generateRandomUInt8Vector(i), true));
-        ASSERT_NO_THROW(ffi_bm25_search(indexDirectory, generateRandomNormalString(i), 100000, generateRandomUInt8Vector(i), true));
+        ASSERT_NO_THROW(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(i), 10, generateRandomUInt8Vector(i), true));
+        ASSERT_NO_THROW(ffi_bm25_natural_language_search(indexDirectory, generateRandomNormalString(i), 100000, generateRandomUInt8Vector(i), true));
     }
 }
 
 TEST_F(BoundaryFFiSearchTest, ffiBM25SearchNullptrParameter) {
-    ASSERT_ANY_THROW(ffi_bm25_search(indexDirectory, nullptr, 10, {}, false));
-    ASSERT_ANY_THROW(ffi_bm25_search(nullptr, generateRandomNormalString(10), 10, generateRandomUInt8Vector(10), true));
-    ASSERT_ANY_THROW(ffi_bm25_search(nullptr, nullptr, 10, generateRandomUInt8Vector(10), true));
+    ASSERT_ANY_THROW(ffi_bm25_natural_language_search(indexDirectory, nullptr, 10, {}, false));
+    ASSERT_ANY_THROW(ffi_bm25_natural_language_search(nullptr, generateRandomNormalString(10), 10, generateRandomUInt8Vector(10), true));
+    ASSERT_ANY_THROW(ffi_bm25_natural_language_search(nullptr, nullptr, 10, generateRandomUInt8Vector(10), true));
 }
 
 TEST_F(BoundaryFFiSearchTest, ffiQueryTermBitmap) {

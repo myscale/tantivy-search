@@ -2,17 +2,17 @@ use crate::common::errors::TantivySearchError;
 use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::search::bridge::index_reader_bridge::IndexReaderBridge;
 use crate::search::implements::strategy::query_strategy::QueryExecutor;
-use crate::search::implements::strategy::query_strategy::SingleTermQueryStrategy;
 use crate::search::utils::convert_utils::ConvertUtils;
 use crate::search::utils::index_searcher_utils::FFiIndexSearcherUtils;
 use crate::FFI_INDEX_SEARCHER_CACHE;
 use crate::{common::constants::LOG_CALLBACK, ERROR};
 use roaring::RoaringBitmap;
 use std::sync::Arc;
+use crate::search::implements::strategy::regex_query::RegexQueryStrategy;
+use crate::search::implements::strategy::sentence_query::SentenceQueryStrategy;
+use crate::search::implements::strategy::single_term_query::SingleTermQueryStrategy;
+use crate::search::implements::strategy::term_set_query::TermSetQueryStrategy;
 
-use super::strategy::query_strategy::RegexQueryStrategy;
-use super::strategy::query_strategy::SentenceQueryStrategy;
-use super::strategy::query_strategy::TermSetQueryStrategy;
 
 /// Execute Term Query in specific rowid range.
 pub fn query_term_with_range(

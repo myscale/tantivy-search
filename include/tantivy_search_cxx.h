@@ -890,7 +890,9 @@ bool ffi_regex_term_with_range(::std::string const &index_path, ::std::string co
 // - `u8_aived_bitmap`: alived rowIds given by u8 bitmap.
 // - `query_with_filter`: whether use alived_bitmap or not.
 // - `statistics`: for multi parts bm25 statistics info.
-::rust::Vec<::RowIdWithScore> ffi_bm25_search(::std::string const &index_path, ::std::string const &sentence, ::std::uint32_t topk, ::std::vector<::std::uint8_t> const &u8_aived_bitmap, bool query_with_filter, ::Statistics const &statistics) noexcept;
+::rust::Vec<::RowIdWithScore> ffi_bm25_natural_language_search(::std::string const &index_path, ::std::string const &sentence, ::std::uint32_t topk, ::std::vector<::std::uint8_t> const &u8_aived_bitmap, bool query_with_filter, ::Statistics const &statistics) noexcept;
+
+::rust::Vec<::RowIdWithScore> ffi_bm25_standard_search(::std::string const &index_path, ::std::string const &sentence, ::std::uint32_t topk, ::std::vector<::std::uint8_t> const &u8_aived_bitmap, bool query_with_filter, bool operator_or, ::Statistics const &statistics) noexcept;
 
 // Get doc freq for current part.
 // arguments:

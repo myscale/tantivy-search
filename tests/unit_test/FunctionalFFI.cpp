@@ -66,10 +66,10 @@ protected:
 TEST_F(FunctionalFFITest, TantivyDeleteRowIds) {
     ASSERT_NO_THROW({
         indexSomeEnglishDocs("{\"col1\":{\"tokenizer\":{\"type\":\"stem\"}}, \"col2\":{\"tokenizer\":{\"type\":\"stem\"}}}");
-        Vec<RowIdWithScore> beforeDeleteTerm = ffi_bm25_search(indexDirectory, "Ancient", 10, {}, false);
+        Vec<RowIdWithScore> beforeDeleteTerm = ffi_bm25_natural_language_search(indexDirectory, "Ancient", 10, {}, false);
         ASSERT_TRUE(beforeDeleteTerm.size()==2);
         ASSERT_TRUE(ffi_delete_row_ids(indexDirectory, {0, 6, 1000}));
-        Vec<RowIdWithScore> afterDeleteTerm = ffi_bm25_search(indexDirectory, "Ancient", 10, {}, false);
+        Vec<RowIdWithScore> afterDeleteTerm = ffi_bm25_natural_language_search(indexDirectory, "Ancient", 10, {}, false);
         ASSERT_TRUE(afterDeleteTerm.size()==0);
     });
 }
@@ -150,7 +150,7 @@ TEST_F(FunctionalFFITest, FFIRegexTermBitmap) {
 TEST_F(FunctionalFFITest, FFIBM25Search) {
     ASSERT_NO_THROW({
         indexSomeEnglishDocs("{\"col1\":{\"tokenizer\":{\"type\":\"stem\"}}, \"col2\":{\"tokenizer\":{\"type\":\"stem\"}}}");
-        Vec<RowIdWithScore> result = ffi_bm25_search(indexDirectory, "the of", 3, {}, false);
+        Vec<RowIdWithScore> result = ffi_bm25_natural_language_search(indexDirectory, "the of", 3, {}, false);
 
         ASSERT_TRUE(result[0].row_id == 3);
         ASSERT_TRUE(result[1].row_id == 2);
@@ -163,7 +163,7 @@ TEST_F(FunctionalFFITest, FFIBM25Search) {
 TEST_F(FunctionalFFITest, FFIBM25SearchWithStopWords) {
     ASSERT_NO_THROW({
         indexSomeEnglishDocs("{\"col1\":{\"tokenizer\":{\"type\":\"stem\", \"stop_word_filters\":[\"english\"]}}, \"col2\":{\"tokenizer\":{\"type\":\"stem\", \"stop_word_filters\":[\"english\"]}}}");
-        Vec<RowIdWithScore> result = ffi_bm25_search(indexDirectory, "the of abc", 3, {}, false);
+        Vec<RowIdWithScore> result = ffi_bm25_natural_language_search(indexDirectory, "the of abc", 3, {}, false);
         
         ASSERT_TRUE(result.size() == 0);
     });
@@ -176,7 +176,7 @@ TEST_F(FunctionalFFITest, TantivyBM25SearchWithFilter) {
         vector<uint8_t> aliveRowIds;
         aliveRowIds.push_back(6); // 00000110 -> row_id: [1, 2], number: 2+4=6
         aliveRowIds.push_back(1); // 00000001 -> row_id: [8], number: 1
-        Vec<RowIdWithScore> result = ffi_bm25_search(indexDirectory, "the of", 10, aliveRowIds, true);
+        Vec<RowIdWithScore> result = ffi_bm25_natural_language_search(indexDirectory, "the of", 10, aliveRowIds, true);
 
         ASSERT_TRUE(result.size() == 2);
         ASSERT_TRUE(result[0].row_id == 1);
