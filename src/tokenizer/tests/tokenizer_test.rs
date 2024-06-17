@@ -13,6 +13,7 @@ mod tests {
     use crate::search::bridge::index_reader_bridge::IndexReaderBridge;
     use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
     use crate::search::implements::api_common_impl::load_index_reader;
+    use crate::search::implements::strategy::bm25_natural_language_query::BM25NaturalLanguageStrategy;
     use crate::search::implements::strategy::query_strategy::{QueryExecutor};
     use crate::{FFI_INDEX_SEARCHER_CACHE, FFI_INDEX_WRITER_CACHE, TEST_MUTEX};
     use crate::search::implements::strategy::bm25_standard_query::BM25StandardQueryStrategy;
@@ -115,7 +116,7 @@ mod tests {
         }
 
 
-        println!("\n----query english-zh `BM25SentenceQueryStrategy`: {:?}-----", sentence);
+        println!("\n----query english-zh `BM25StandardQueryStrategy`: {:?}-----", sentence);
         let bm25_sentence_strategy: BM25StandardQueryStrategy<'_> = BM25StandardQueryStrategy {
             // column_names: &vec!["col1".to_string()],
             sentence,
@@ -127,6 +128,27 @@ mod tests {
         };
         let query_executor: QueryExecutor<'_, Vec<RowIdWithScore>> =
             QueryExecutor::new(&bm25_sentence_strategy);
+
+        // Compute query results.
+        let result: Vec<RowIdWithScore> = query_executor.execute(&index_reader_bridge.reader.searcher()).unwrap();
+        println!("searched res count:{:?}", result.len());
+        for re in result {
+            println!("rowid with score is: {:?}", re);
+        }
+
+
+        println!("\n----query english-zh `BM25NaturalLanguageStrategy`: {:?}-----", sentence);
+        let bm25_nlq_strategy: BM25NaturalLanguageStrategy<'_> = BM25NaturalLanguageStrategy {
+            // column_names: &vec!["col1".to_string()],
+            sentence,
+            topk: &10,
+            query_with_filter: &false,
+            u8_aived_bitmap: &vec![],
+            need_doc: &true,
+            operation_or: &true,
+        };
+        let query_executor: QueryExecutor<'_, Vec<RowIdWithScore>> =
+            QueryExecutor::new(&bm25_nlq_strategy);
 
         // Compute query results.
         let result: Vec<RowIdWithScore> = query_executor.execute(&index_reader_bridge.reader.searcher()).unwrap();

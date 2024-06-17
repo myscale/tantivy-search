@@ -103,6 +103,7 @@ mod tests {
             sentence: "Literary inventions capture philosophical masterpieces.",
             topk: &10,
             query_with_filter: &false,
+            operation_or: &true,
             u8_aived_bitmap: &vec![],
             need_doc: &false,
         };
