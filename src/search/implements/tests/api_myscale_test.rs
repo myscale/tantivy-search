@@ -15,7 +15,7 @@ mod tests {
     use crate::ffi::{DocWithFreq, FieldTokenNums, RowIdWithScore, Statistics};
     use crate::search::implements::api_common_impl::load_index_reader;
     use crate::search::implements::api_myscale_impl::{
-        bm25_search, get_doc_freq, get_total_num_docs, get_total_num_tokens,
+        bm25_natural_language_search, get_doc_freq, get_total_num_docs, get_total_num_tokens,
     };
 
     #[allow(dead_code)]
@@ -209,7 +209,7 @@ mod tests {
         statistics: &Statistics,
         need_docs: bool,
     ) -> Vec<DocsWithScore> {
-        let res: Vec<RowIdWithScore> = bm25_search(
+        let res: Vec<RowIdWithScore> = bm25_natural_language_search(
             part_path,
             query_str,
             topk,

@@ -13,8 +13,10 @@ mod tests {
     use crate::search::bridge::index_reader_bridge::IndexReaderBridge;
     use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
     use crate::search::implements::api_common_impl::load_index_reader;
-    use crate::search::implements::strategy::query_strategy::{BM25SentenceQueryStrategy, QueryExecutor};
+    use crate::search::implements::strategy::query_strategy::{QueryExecutor};
     use crate::{FFI_INDEX_SEARCHER_CACHE, FFI_INDEX_WRITER_CACHE, TEST_MUTEX};
+    use crate::search::implements::strategy::bm25_standard_query::BM25StandardQueryStrategy;
+
     fn to_c_str(s: &str) -> *const c_char {
         CString::new(s).unwrap().into_raw()
     }
@@ -114,13 +116,14 @@ mod tests {
 
 
         println!("\n----query english-zh `BM25SentenceQueryStrategy`: {:?}-----", sentence);
-        let bm25_sentence_strategy: BM25SentenceQueryStrategy<'_> = BM25SentenceQueryStrategy {
-            column_names: &vec!["col1".to_string()],
+        let bm25_sentence_strategy: BM25StandardQueryStrategy<'_> = BM25StandardQueryStrategy {
+            // column_names: &vec!["col1".to_string()],
             sentence,
             topk: &10,
             query_with_filter: &false,
             u8_aived_bitmap: &vec![],
             need_doc: &true,
+            operation_or: &true,
         };
         let query_executor: QueryExecutor<'_, Vec<RowIdWithScore>> =
             QueryExecutor::new(&bm25_sentence_strategy);

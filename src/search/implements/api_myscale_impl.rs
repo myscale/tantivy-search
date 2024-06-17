@@ -14,50 +14,40 @@ use crate::ffi::DocWithFreq;
 use crate::ffi::Statistics;
 use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::search::bridge::index_reader_bridge::IndexReaderBridge;
+use crate::search::implements::strategy::bm25_standard_query::BM25StandardQueryStrategy;
 use crate::RowIdWithScore;
 use crate::DEBUG;
 use crate::FFI_INDEX_SEARCHER_CACHE;
 use crate::{common::constants::LOG_CALLBACK, ERROR};
 use std::collections::HashMap;
 use std::sync::Arc;
-
-use super::strategy::query_strategy::BM25QueryStrategy;
+use crate::search::implements::strategy::bm25_natural_language_query::BM25NaturalLanguageStrategy;
 use super::strategy::query_strategy::QueryExecutor;
+use super::strategy::query_strategy::QueryStrategy;
 
-pub fn bm25_search(
+fn bm25_inner_search(
     index_path: &str,
-    sentence: &str,
-    topk: u32,
-    u8_aived_bitmap: &Vec<u8>,
-    query_with_filter: bool,
     statistics: &Statistics,
-    need_doc: bool,
+    strategy: &dyn QueryStrategy<Vec<RowIdWithScore>>
 ) -> Result<Vec<RowIdWithScore>, TantivySearchError> {
-    // Get index_reader_bridge from CACHE
-    let index_reader_bridge: Arc<IndexReaderBridge> = FFI_INDEX_SEARCHER_CACHE
+        // Get index_reader_bridge from CACHE
+        let index_reader_bridge: Arc<IndexReaderBridge> = FFI_INDEX_SEARCHER_CACHE
         .get_index_reader_bridge(index_path.to_string())
         .map_err(|e| {
-            ERROR!(function:"bm25_search", "{}", e);
+            ERROR!(function:"bm25_inner_search", "{}", e);
             TantivySearchError::InternalError(e)
         })?;
 
     // Choose query strategy to construct query executor.
-    let sentence_query: BM25QueryStrategy<'_> = BM25QueryStrategy {
-        sentence,
-        topk: &topk,
-        u8_aived_bitmap,
-        query_with_filter: &query_with_filter,
-        need_doc: &need_doc,
-    };
     let query_executor: QueryExecutor<'_, Vec<RowIdWithScore>> =
-        QueryExecutor::new(&sentence_query);
+        QueryExecutor::new(strategy);
 
     let searcher = &mut index_reader_bridge.reader.searcher();
 
     // Not use statistics info.
     if statistics.docs_freq.len() == 0 {
         let result: Vec<RowIdWithScore> = query_executor.execute(searcher).map_err(|e| {
-            ERROR!(function:"bm25_search", "{}", e);
+            ERROR!(function:"bm25_inner_search", "{}", e);
             TantivySearchError::IndexSearcherError(e)
         })?;
 
@@ -87,17 +77,64 @@ pub fn bm25_search(
         total_num_docs: statistics.total_num_docs,
     };
 
-    DEBUG!(function:"bm25_search", "index_path:[{:?}], use MultiPartsStatistics[{:?}]", index_path, multi_parts_statistics);
+    DEBUG!(function:"bm25_inner_search", "index_path:[{:?}], use MultiPartsStatistics[{:?}]", index_path, multi_parts_statistics);
 
     let _ = searcher.update_multi_parts_statistics(multi_parts_statistics);
 
     let result: Vec<RowIdWithScore> = query_executor.execute(searcher).map_err(|e| {
-        ERROR!(function:"bm25_search", "{}", e);
+        ERROR!(function:"bm25_inner_search", "{}", e);
         TantivySearchError::IndexSearcherError(e)
     })?;
 
     Ok(result)
 }
+
+
+pub fn bm25_natural_language_search(
+    index_path: &str,
+    sentence: &str,
+    topk: u32,
+    u8_aived_bitmap: &Vec<u8>,
+    query_with_filter: bool,
+    statistics: &Statistics,
+    need_doc: bool,
+) -> Result<Vec<RowIdWithScore>, TantivySearchError> {
+    // Choose query strategy to construct query executor.
+    let bm25_natural_language_query: BM25NaturalLanguageStrategy<'_> = BM25NaturalLanguageStrategy {
+        sentence,
+        topk: &topk,
+        u8_aived_bitmap,
+        query_with_filter: &query_with_filter,
+        need_doc: &need_doc,
+    };
+
+    bm25_inner_search(index_path, statistics, &bm25_natural_language_query)
+}
+
+
+pub fn bm25_standard_search(
+    index_path: &str,
+    sentence: &str,
+    topk: u32,
+    u8_aived_bitmap: &Vec<u8>,
+    query_with_filter: bool,
+    operator_or: bool,
+    statistics: &Statistics,
+    need_doc: bool,
+) -> Result<Vec<RowIdWithScore>, TantivySearchError> {
+    // Choose query strategy to construct query executor.
+    let bm25_standard_query: BM25StandardQueryStrategy<'_> = BM25StandardQueryStrategy {
+        sentence,
+        topk: &topk,
+        query_with_filter: &query_with_filter,
+        u8_aived_bitmap,
+        need_doc: &need_doc,
+        operation_or: &operator_or,
+    };
+
+    bm25_inner_search(index_path, statistics, &bm25_standard_query)
+}
+
 
 pub fn get_doc_freq(
     index_path: &str,

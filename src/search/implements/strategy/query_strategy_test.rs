@@ -9,11 +9,13 @@ mod tests {
     use crate::{
         common::tests::index_3column_docs_with_threads_merge,
         ffi::RowIdWithScore,
-        search::implements::strategy::query_strategy::{
-            BM25QueryStrategy, ParserQueryStrategy, QueryExecutor, RegexQueryStrategy,
-            SingleTermQueryStrategy, TermSetQueryStrategy,
-        },
     };
+    use crate::search::implements::strategy::bm25_natural_language_query::BM25NaturalLanguageStrategy;
+    use crate::search::implements::strategy::parser_query::ParserQueryStrategy;
+    use crate::search::implements::strategy::query_strategy::QueryExecutor;
+    use crate::search::implements::strategy::regex_query::RegexQueryStrategy;
+    use crate::search::implements::strategy::single_term_query::SingleTermQueryStrategy;
+    use crate::search::implements::strategy::term_set_query::TermSetQueryStrategy;
 
     #[test]
     fn test_term_set_query_strategy() {
@@ -97,7 +99,7 @@ mod tests {
         let (index_reader, _) = index_3column_docs_with_threads_merge(temp_directory_str);
 
         // Choose query strategy to construct query executor.
-        let bm25_strategy: BM25QueryStrategy<'_> = BM25QueryStrategy {
+        let bm25_strategy: BM25NaturalLanguageStrategy<'_> = BM25NaturalLanguageStrategy {
             sentence: "Literary inventions capture philosophical masterpieces.",
             topk: &10,
             query_with_filter: &false,

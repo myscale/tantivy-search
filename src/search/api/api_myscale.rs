@@ -1,7 +1,8 @@
 use crate::cxx_vector_converter;
 use crate::ffi::Statistics;
 use crate::logger::logger_bridge::TantivySearchLogger;
-use crate::search::implements::api_myscale_impl::bm25_search;
+use crate::search::implements::api_myscale_impl::bm25_natural_language_search;
+use crate::search::implements::api_myscale_impl::bm25_standard_search;
 use crate::search::implements::api_myscale_impl::get_doc_freq;
 use crate::search::implements::api_myscale_impl::get_total_num_docs;
 use crate::search::implements::api_myscale_impl::get_total_num_tokens;
@@ -12,7 +13,7 @@ use crate::{common::constants::LOG_CALLBACK, ERROR};
 use cxx::CxxString;
 use cxx::CxxVector;
 
-pub fn ffi_bm25_search(
+pub fn ffi_bm25_natural_language_search(
     index_path: &CxxString,
     sentence: &CxxString,
     topk: u32,
@@ -23,7 +24,7 @@ pub fn ffi_bm25_search(
     let index_path: String = match CXX_STRING_CONERTER.convert(index_path) {
         Ok(path) => path,
         Err(e) => {
-            ERROR!(function: "ffi_bm25_search", "Can't convert 'index_path', message: {}", e);
+            ERROR!(function: "ffi_bm25_natural_language_search", "Can't convert 'index_path', message: {}", e);
             return Vec::new();
         }
     };
@@ -31,7 +32,7 @@ pub fn ffi_bm25_search(
     let sentence: String = match CXX_STRING_CONERTER.convert(sentence) {
         Ok(q) => q,
         Err(e) => {
-            ERROR!(function: "ffi_bm25_search", "Can't convert 'sentence', message: {}", e);
+            ERROR!(function: "ffi_bm25_natural_language_search", "Can't convert 'sentence', message: {}", e);
             return Vec::new();
         }
     };
@@ -39,12 +40,12 @@ pub fn ffi_bm25_search(
     let u8_aived_bitmap: Vec<u8> = match cxx_vector_converter::<u8>().convert(u8_aived_bitmap) {
         Ok(bitmap) => bitmap,
         Err(e) => {
-            ERROR!(function: "ffi_bm25_search", "Can't convert vector 'u8_aived_bitmap', message: {}", e);
+            ERROR!(function: "ffi_bm25_natural_language_search", "Can't convert vector 'u8_aived_bitmap', message: {}", e);
             return Vec::new();
         }
     };
 
-    match bm25_search(
+    match bm25_natural_language_search(
         &index_path,
         &sentence,
         topk,
@@ -55,11 +56,63 @@ pub fn ffi_bm25_search(
     ) {
         Ok(results) => results,
         Err(e) => {
-            ERROR!(function: "ffi_bm25_search", "Error performing BM25 search with statistics: {}", e);
+            ERROR!(function: "ffi_bm25_natural_language_search", "Error performing BM25 search with statistics: {}", e);
             Vec::new()
         }
     }
 }
+
+pub fn ffi_bm25_standard_search(
+    index_path: &CxxString,
+    sentence: &CxxString,
+    topk: u32,
+    u8_aived_bitmap: &CxxVector<u8>,
+    query_with_filter: bool,
+    operator_or: bool,
+    statistics: &Statistics,
+) -> Vec<RowIdWithScore> {
+    let index_path: String = match CXX_STRING_CONERTER.convert(index_path) {
+        Ok(path) => path,
+        Err(e) => {
+            ERROR!(function: "ffi_bm25_standard_search", "Can't convert 'index_path', message: {}", e);
+            return Vec::new();
+        }
+    };
+
+    let sentence: String = match CXX_STRING_CONERTER.convert(sentence) {
+        Ok(q) => q,
+        Err(e) => {
+            ERROR!(function: "ffi_bm25_standard_search", "Can't convert 'sentence', message: {}", e);
+            return Vec::new();
+        }
+    };
+
+    let u8_aived_bitmap: Vec<u8> = match cxx_vector_converter::<u8>().convert(u8_aived_bitmap) {
+        Ok(bitmap) => bitmap,
+        Err(e) => {
+            ERROR!(function: "ffi_bm25_standard_search", "Can't convert vector 'u8_aived_bitmap', message: {}", e);
+            return Vec::new();
+        }
+    };
+
+    match bm25_standard_search(
+        &index_path,
+        &sentence,
+        topk,
+        &u8_aived_bitmap,
+        query_with_filter,
+        operator_or,
+        statistics,
+        false,
+    ) {
+        Ok(results) => results,
+        Err(e) => {
+            ERROR!(function: "ffi_bm25_standard_search", "Error performing BM25 standard search with statistics: {}", e);
+            Vec::new()
+        }
+    }
+}
+
 
 pub fn ffi_get_doc_freq(index_path: &CxxString, sentence: &CxxString) -> Vec<DocWithFreq> {
     let index_path: String = match CXX_STRING_CONERTER.convert(index_path) {

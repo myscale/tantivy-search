@@ -126,10 +126,10 @@ void run_benchmark(size_t idx,                               // iter id
                    std::atomic<size_t> &finished_tasks,      // how many tasks have been finished
                    std::atomic<size_t> &enqueue_tasks_count, // record enqueue task size.
                    std::size_t max_pending_tasks,            // `bench_task` max count in queue
-                   bool use_bm25_search,                     // test `bm25_search`, rather than `skip-index`
-                   bool use_topk_delete,                     // whether use random delete when test `bm25_search`. 
+                   bool use_bm25_search,                     // test `bm25_natural_language_search`, rather than `skip-index`
+                   bool use_topk_delete,                     // whether use random delete when test `bm25_natural_language_search`. 
                    bool verify_delete_correct,               // when use topk_delete, verify it's results.
-                   std::size_t bm25_search_topk,             // bm25_search topk
+                   std::size_t bm25_search_topk,             // bm25_natural_language_search topk
                    bool only_random_delete)                  // only use random k delete
 {
     // mark benchmark should stop.
@@ -161,14 +161,14 @@ void run_benchmark(size_t idx,                               // iter id
             pool.enqueue([idx, term, &row_id_range, row_id_step, index_path, &query_count, &finished_tasks, use_bm25_search, use_topk_delete, verify_delete_correct, bm25_search_topk, only_random_delete](){
                 auto start_query = std::chrono::high_resolution_clock::now();
                 if(use_bm25_search){
-                    // for bm25_search test
+                    // for bm25_natural_language_search test
                     if(only_random_delete){
                         // just delete random row ids.
                         std::vector<u_int32_t> delete_row_ids = randomExtractK<size_t, u_int32_t>(row_id_range, bm25_search_topk);
                         ffi_delete_row_ids(index_path, delete_row_ids);
                     }else{
                         // Step1. first bm25 search.
-                        rust::cxxbridge1::Vec<RowIdWithScore> result = ffi_bm25_search(index_path, term, bm25_search_topk, {}, false);
+                        rust::cxxbridge1::Vec<RowIdWithScore> result = ffi_bm25_natural_language_search(index_path, term, bm25_search_topk, {}, false);
                         std::vector<uint32_t> row_ids;
                         for (size_t i = 0; i < result.size(); i++)
                             row_ids.push_back(static_cast<uint32_t>(result[i].row_id));
@@ -177,7 +177,7 @@ void run_benchmark(size_t idx,                               // iter id
                             ffi_delete_row_ids(index_path, row_ids);
                             if(verify_delete_correct){
                                 // Step3. research for verify result.
-                                rust::cxxbridge1::Vec<RowIdWithScore> result_after_delete = ffi_bm25_search(index_path, term, bm25_search_topk, {}, false);
+                                rust::cxxbridge1::Vec<RowIdWithScore> result_after_delete = ffi_bm25_natural_language_search(index_path, term, bm25_search_topk, {}, false);
                                 std::vector<uint32_t> row_ids_after_delete;
                                 for (size_t i = 0; i < result_after_delete.size(); i++)
                                     row_ids_after_delete.push_back(static_cast<uint32_t>(result_after_delete[i].row_id));

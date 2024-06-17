@@ -39,7 +39,7 @@ public:
         for (auto _ : state) {
             for (size_t i = 0; i < 1000; i++)
             {
-                ffi_bm25_search(
+                ffi_bm25_natural_language_search(
                     QueryTerms::TANTIVY_INDEX_FILES_PATH,
                     QueryTerms::QUERY_SENTENCE_WITHIN_5_TERMS[ (i+queries)%QueryTerms::QUERY_SENTENCE_WITHIN_5_TERMS.size() ],
                     topK,
@@ -59,7 +59,7 @@ public:
         for (auto _ : state) {
             for (size_t i = 0; i < 1000; i++)
             {
-                ffi_bm25_search(
+                ffi_bm25_natural_language_search(
                     QueryTerms::TANTIVY_INDEX_FILES_PATH,
                     QueryTerms::QUERY_SENTENCE_WITHIN_5_TERMS[ (i+queries)%QueryTerms::QUERY_SENTENCE_WITHIN_5_TERMS.size() ],
                     topK,
