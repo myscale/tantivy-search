@@ -157,6 +157,8 @@ mod tests {
             println!("rowid with score is: {:?}", re);
         }
 
+        println!("num cpus is {:?}", num_cpus::get());
+
     }
 
 
