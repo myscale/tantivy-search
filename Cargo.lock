@@ -1912,6 +1912,7 @@ dependencies = [
  "libc",
  "log",
  "log4rs",
+ "num_cpus",
  "once_cell",
  "rand",
  "rayon",

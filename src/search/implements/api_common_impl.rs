@@ -87,7 +87,7 @@ pub fn load_index_reader(index_path: &str) -> Result<bool, TantivySearchError> {
     #[cfg(feature = "use-shared-search-pool")]
     {
         // Set the multithreaded executor for search.
-        match FFI_INDEX_SEARCHER_CACHE.get_shared_multithread_executor(2) {
+        match FFI_INDEX_SEARCHER_CACHE.get_shared_multithread_executor(num_cpus::get()) {
             Ok(shared_thread_pool) => {
                 index
                     .set_shared_multithread_executor(shared_thread_pool)
