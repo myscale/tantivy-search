@@ -9,6 +9,7 @@ use tantivy::schema::Field;
 use tantivy::{DocAddress, DocId, Score, Searcher, SegmentOrdinal, SegmentReader};
 
 use crate::RowIdWithScore;
+use crate::search::utils::convert_utils::ConvertUtils;
 
 // Class Inheritance Diagram:
 //
@@ -27,6 +28,7 @@ static INITIAL_HEAP_SIZE: usize = 1000;
 pub struct TopDocsWithFilter {
     pub limit: usize,
     pub row_id_bitmap: Option<Arc<RoaringBitmap>>,
+    pub row_id_u8: Option<Vec<u8>>,
     pub searcher: Option<Searcher>,
     pub text_fields: Option<Vec<Field>>,
     pub need_text: bool,
@@ -40,6 +42,7 @@ impl TopDocsWithFilter {
         Self {
             limit,
             row_id_bitmap: None,
+            row_id_u8: None,
             searcher: None,
             text_fields: None,
             need_text: false,
@@ -50,6 +53,12 @@ impl TopDocsWithFilter {
     // `row_id_bitmap` is used to mark aive row_ids.
     pub fn with_alive(mut self, row_id_bitmap: Arc<RoaringBitmap>) -> TopDocsWithFilter {
         self.row_id_bitmap = Some(Arc::clone(&row_id_bitmap));
+        self
+    }
+
+    // `row_id_bitmap` is used to mark aive row_ids.
+    pub fn with_alive_u8(mut self, row_id_u8: Vec<u8>) -> TopDocsWithFilter {
+        self.row_id_u8 = Some(row_id_u8);
         self
     }
 
@@ -131,9 +140,10 @@ impl fmt::Debug for TopDocsWithFilter {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "TopDocsWithFilter(limit:{}, row_ids_size:{}, text_fields_is_some:{}, searcher_is_some:{}, need_text:{}, initial_heap_size:{})",
+            "TopDocsWithFilter(limit:{}, row_id_bitmap_size:{}, row_id_u8_size:{}, text_fields_is_some:{}, searcher_is_some:{}, need_text:{}, initial_heap_size:{})",
             self.limit,
             if self.row_id_bitmap.is_some() {self.row_id_bitmap.clone().unwrap().len()} else {0},
+            if self.row_id_u8.is_some() {self.row_id_u8.clone().unwrap().len()} else {0},
             self.text_fields.is_some(),
             self.searcher.is_some(),
             self.need_text,
@@ -217,6 +227,12 @@ impl Collector for TopDocsWithFilter {
                 let row_id = row_id_field_reader.get_val(doc);
                 if self.row_id_bitmap.is_some()
                     && !self.row_id_bitmap.clone().unwrap().contains(row_id as u32)
+                {
+                    return Score::MIN;
+                }
+
+                if self.row_id_u8.is_some()
+                    && ConvertUtils::is_row_id_exist(row_id as u32, &self.row_id_u8.as_ref().unwrap())
                 {
                     return Score::MIN;
                 }

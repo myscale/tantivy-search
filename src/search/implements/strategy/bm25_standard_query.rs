@@ -56,9 +56,10 @@ impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25StandardQueryStrategy<'a> {
 
         // If query_with_filter is false, we regards that don't use alive_bitmap.
         if *self.query_with_filter {
-            let mut alive_bitmap: RoaringBitmap = RoaringBitmap::new();
-            alive_bitmap.extend(ConvertUtils::u8_bitmap_to_row_ids(self.u8_aived_bitmap));
-            top_docs_collector = top_docs_collector.with_alive(Arc::new(alive_bitmap));
+            // let mut alive_bitmap: RoaringBitmap = RoaringBitmap::new();
+            // alive_bitmap.extend(ConvertUtils::u8_bitmap_to_row_ids(self.u8_aived_bitmap));
+            // top_docs_collector = top_docs_collector.with_alive(Arc::new(alive_bitmap));
+            top_docs_collector = top_docs_collector.with_alive_u8(self.u8_aived_bitmap.clone());
         }
 
         let mut terms: Vec<Term> = Vec::new();

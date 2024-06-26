@@ -1,8 +1,9 @@
 use std::sync::Arc;
 use roaring::RoaringBitmap;
 use tantivy::query::RegexQuery;
-use tantivy::schema::{Field, Schema};
+use tantivy::schema::{Field, FieldType, Schema, TextFieldIndexing};
 use tantivy::Searcher;
+use tantivy::tokenizer::TextAnalyzer;
 use crate::common::errors::IndexSearcherError;
 use crate::common::constants::LOG_CALLBACK;
 use crate::logger::logger_bridge::TantivySearchLogger;
@@ -31,6 +32,18 @@ impl<'a> QueryStrategy<Arc<RoaringBitmap>> for RegexQueryStrategy<'a> {
             ERROR!(function:"RegexQueryStrategy", "{}", error);
             error
         })?;
+
+        // TODO support lower case
+        // let field_entry = schema.get_field_entry(col_field);
+        // if let FieldType::Str(ref str_options) = field_entry.field_type(){
+        //     let tokenizer = str_options.get_indexing_options().unwrap().tokenizer();
+        //     let mut text_analyzer: TextAnalyzer = searcher
+        //         .index()
+        //         .tokenizers()
+        //         .get(tokenizer)
+        //         .unwrap();
+        //     text_analyzer.
+        // }
 
         let row_id_collector: RowIdRoaringCollector =
             RowIdRoaringCollector::with_field("row_id".to_string());
