@@ -11,6 +11,7 @@ use tantivy::{
 };
 
 use crate::common::errors::TokenizerUtilsError;
+use crate::tokenizer::vo::tokenizer_json_vo::Config;
 
 use super::vo::{
     language::{SupportFilterLanguage, SupportLanguageAlgorithm},
@@ -103,7 +104,7 @@ impl ToeknizerUtils {
     pub fn parse_tokenizer_json_to_config_map(
         json_str: &str,
     ) -> Result<std::collections::HashMap<String, TokenizerConfig>, TokenizerUtilsError> {
-        let config: crate::tokenizer::vo::tokenizer_json_vo::Config =
+        let config: Config =
             serde_json::from_str(json_str)
                 .map_err(|e| TokenizerUtilsError::JsonDeserializeError(e.to_string()))?;
 
@@ -325,7 +326,7 @@ impl ToeknizerUtils {
         Ok(tokenizer_map)
     }
 
-    pub fn varify_json_parameter(json_str: &str) -> Result<bool, TokenizerUtilsError> {
+    pub fn verify_json_parameter(json_str: &str) -> Result<bool, TokenizerUtilsError> {
         let _: crate::tokenizer::vo::tokenizer_json_vo::Config = serde_json::from_str(json_str)
             .map_err(|e| TokenizerUtilsError::JsonDeserializeError(e.to_string()))?;
         Ok(true)
