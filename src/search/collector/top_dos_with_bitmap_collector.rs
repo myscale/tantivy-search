@@ -232,7 +232,7 @@ impl Collector for TopDocsWithFilter {
                 }
 
                 if self.row_id_u8.is_some()
-                    && ConvertUtils::is_row_id_exist(row_id as u32, &self.row_id_u8.as_ref().unwrap())
+                    && !ConvertUtils::is_row_id_exist(row_id as u32, &self.row_id_u8.as_ref().unwrap())
                 {
                     return Score::MIN;
                 }
