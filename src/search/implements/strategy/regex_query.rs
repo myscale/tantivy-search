@@ -1,9 +1,8 @@
 use std::sync::Arc;
 use roaring::RoaringBitmap;
 use tantivy::query::RegexQuery;
-use tantivy::schema::{Field, FieldType, Schema, TextFieldIndexing};
+use tantivy::schema::{Field, Schema};
 use tantivy::Searcher;
-use tantivy::tokenizer::TextAnalyzer;
 use crate::common::errors::IndexSearcherError;
 use crate::common::constants::LOG_CALLBACK;
 use crate::logger::logger_bridge::TantivySearchLogger;

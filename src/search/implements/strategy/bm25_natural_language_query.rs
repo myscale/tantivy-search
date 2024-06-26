@@ -1,5 +1,3 @@
-use std::sync::Arc;
-use roaring::RoaringBitmap;
 use tantivy::query::{Query, QueryParser, QueryParserError};
 use tantivy::schema::{Field, Schema};
 use tantivy::{Searcher, TantivyError};
@@ -8,7 +6,6 @@ use crate::ERROR;
 use crate::ffi::RowIdWithScore;
 use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
 use crate::search::implements::strategy::query_strategy::QueryStrategy;
-use crate::search::utils::convert_utils::ConvertUtils;
 use crate::common::constants::LOG_CALLBACK;
 use crate::logger::logger_bridge::TantivySearchLogger;
 /// Execute query for a sentence and get bm25 score.

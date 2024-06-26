@@ -48,6 +48,7 @@ impl ConvertUtils {
     }
 
     // convert u8_bitmap to row_ids
+    #[allow(unused)]
     pub fn u8_bitmap_to_row_ids(bitmap: &[u8]) -> Vec<u32> {
         let mut row_ids = Vec::new();
         for (i, &byte) in bitmap.iter().enumerate() {
@@ -61,16 +62,17 @@ impl ConvertUtils {
     }
 
     // convert u8_bitmap to row_ids
+    #[allow(unused)]
     pub fn u8_bitmap_to_roaring(bitmap: &[u8]) -> RoaringBitmap {
-        let mut roaringBitmap: RoaringBitmap = RoaringBitmap::new();
+        let mut roaring_bitmap: RoaringBitmap = RoaringBitmap::new();
         for (i, &byte) in bitmap.iter().enumerate() {
             for j in 0..8 {
                 if byte & (1 << j) != 0 {
-                    roaringBitmap.insert((i * 8 + j) as u32);
+                    roaring_bitmap.insert((i * 8 + j) as u32);
                 }
             }
         }
-        roaringBitmap
+        roaring_bitmap
     }
 
     pub fn row_ids_to_u8_bitmap(row_ids: &[u32]) -> Vec<u8> {

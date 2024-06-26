@@ -1,5 +1,3 @@
-use std::sync::Arc;
-use roaring::RoaringBitmap;
 use tantivy::schema::{Field, FieldType, Schema, TextFieldIndexing};
 use tantivy::{Searcher, Term};
 use tantivy::query::BooleanQuery;
@@ -9,7 +7,6 @@ use crate::ERROR;
 use crate::ffi::RowIdWithScore;
 use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
 use crate::search::implements::strategy::query_strategy::QueryStrategy;
-use crate::search::utils::convert_utils::ConvertUtils;
 use crate::common::constants::LOG_CALLBACK;
 use crate::logger::logger_bridge::TantivySearchLogger;
 /// TODO Need Support Multi Column and BM25 Score.
