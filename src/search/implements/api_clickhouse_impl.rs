@@ -63,7 +63,7 @@ pub fn query_terms_with_range(
     let index_reader_bridge: Arc<IndexReaderBridge> = FFI_INDEX_SEARCHER_CACHE
         .get_index_reader_bridge(index_path.to_string())
         .map_err(|e| {
-            ERROR!(function:"query_term_with_range", "{}", e);
+            ERROR!(function:"query_terms_with_range", "{}", e);
             TantivySearchError::InternalError(e)
         })?;
 
@@ -100,7 +100,7 @@ pub fn query_sentence_with_range(
     let index_reader_bridge: Arc<IndexReaderBridge> = FFI_INDEX_SEARCHER_CACHE
         .get_index_reader_bridge(index_path.to_string())
         .map_err(|e| {
-            ERROR!(function:"query_term_with_range", "{}", e);
+            ERROR!(function:"query_sentence_with_range", "{}", e);
             TantivySearchError::InternalError(e)
         })?;
 
@@ -140,7 +140,7 @@ pub fn regex_term_with_range(
     let index_reader_bridge: Arc<IndexReaderBridge> = FFI_INDEX_SEARCHER_CACHE
         .get_index_reader_bridge(index_path.to_string())
         .map_err(|e| {
-            ERROR!(function:"query_term_with_range", "{}", e);
+            ERROR!(function:"regex_term_with_range", "{}", e);
             TantivySearchError::InternalError(e)
         })?;
 

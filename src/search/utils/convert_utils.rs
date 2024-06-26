@@ -1,3 +1,5 @@
+use roaring::RoaringBitmap;
+
 pub struct ConvertUtils;
 
 impl ConvertUtils {
@@ -46,6 +48,7 @@ impl ConvertUtils {
     }
 
     // convert u8_bitmap to row_ids
+    #[allow(unused)]
     pub fn u8_bitmap_to_row_ids(bitmap: &[u8]) -> Vec<u32> {
         let mut row_ids = Vec::new();
         for (i, &byte) in bitmap.iter().enumerate() {
@@ -56,6 +59,20 @@ impl ConvertUtils {
             }
         }
         row_ids
+    }
+
+    // convert u8_bitmap to row_ids
+    #[allow(unused)]
+    pub fn u8_bitmap_to_roaring(bitmap: &[u8]) -> RoaringBitmap {
+        let mut roaring_bitmap: RoaringBitmap = RoaringBitmap::new();
+        for (i, &byte) in bitmap.iter().enumerate() {
+            for j in 0..8 {
+                if byte & (1 << j) != 0 {
+                    roaring_bitmap.insert((i * 8 + j) as u32);
+                }
+            }
+        }
+        roaring_bitmap
     }
 
     pub fn row_ids_to_u8_bitmap(row_ids: &[u32]) -> Vec<u8> {
@@ -75,11 +92,23 @@ impl ConvertUtils {
 
         bitmap
     }
+
+    pub fn is_row_id_exist(row_id: u32, bitmap: &[u8]) -> bool {
+        let idx = row_id / 8;
+        if idx >= bitmap.len() as u32 {
+            return false;
+        }
+        let offset = row_id % 8;
+        let byte = bitmap[idx as usize];
+        (byte & (1 << offset)) != 0
+    }
 }
 
 #[cfg(test)]
 mod tests {
     mod convert_utils {
+        use std::time::Instant;
+        use roaring::RoaringBitmap;
         use super::super::*;
 
         #[test]
@@ -226,6 +255,67 @@ mod tests {
 
             let row_ids_h: Vec<u32> = vec![13];
             assert_eq!(ConvertUtils::row_ids_to_u8_bitmap(&row_ids_h), [0, 32]);
+        }
+
+        #[test]
+        fn test_massive_u8_bitmap_convert() {
+            let start_1 = Instant::now();
+            let mut row_ids_u8: Vec<u8> = vec![];
+            for i in 0..200000000/8 {
+                row_ids_u8.push(255)
+            }
+            println!("generate u8 vector, size: {:?} consume: {:?}", row_ids_u8.len(), start_1.elapsed());
+
+            let start_2 = Instant::now();
+            let row_ids_u32 = ConvertUtils::u8_bitmap_to_row_ids(&row_ids_u8);
+            println!("convert vec[u8] -> vec[u32], size: {:?} consume: {:?}", row_ids_u32.len(), start_2.elapsed());
+
+            let start_3 = Instant::now();
+            let mut alive_bitmap: RoaringBitmap = RoaringBitmap::new();
+            alive_bitmap.extend(row_ids_u32);
+            println!("convert vec[u32] -> roaring, size: {:?} consume: {:?}", alive_bitmap.len(), start_3.elapsed());
+
+            let start_4 = Instant::now();
+            let directly_convert_res = ConvertUtils::u8_bitmap_to_roaring(&row_ids_u8);
+            println!("directly convert vec[u8] -> roaring, size: {:?} consume: {:?}", directly_convert_res.len(), start_4.elapsed());
+
+        }
+
+        #[test]
+        fn test_is_row_id_exist() {
+            // 测试用例 1
+            let bitmap1: Vec<u8> = vec![255, 255];
+            assert_eq!(ConvertUtils::is_row_id_exist(0, &bitmap1), true);
+            assert_eq!(ConvertUtils::is_row_id_exist(7, &bitmap1), true);
+            assert_eq!(ConvertUtils::is_row_id_exist(8, &bitmap1), true);
+            assert_eq!(ConvertUtils::is_row_id_exist(15, &bitmap1), true);
+            assert_eq!(ConvertUtils::is_row_id_exist(16, &bitmap1), false);
+
+            // 测试用例 2
+            let bitmap2: Vec<u8> = vec![12, 16];
+            assert_eq!(ConvertUtils::is_row_id_exist(0, &bitmap2), false);
+            assert_eq!(ConvertUtils::is_row_id_exist(2, &bitmap2), true);
+            assert_eq!(ConvertUtils::is_row_id_exist(3, &bitmap2), true);
+            assert_eq!(ConvertUtils::is_row_id_exist(4, &bitmap2), false);
+            assert_eq!(ConvertUtils::is_row_id_exist(12, &bitmap2), true);
+            assert_eq!(ConvertUtils::is_row_id_exist(13, &bitmap2), false);
+
+            // 测试用例 3
+            let bitmap3: Vec<u8> = vec![1, 0, 2, 4];
+            assert_eq!(ConvertUtils::is_row_id_exist(0, &bitmap3), true);
+            assert_eq!(ConvertUtils::is_row_id_exist(1, &bitmap3), false);
+            assert_eq!(ConvertUtils::is_row_id_exist(16, &bitmap3), false);
+            assert_eq!(ConvertUtils::is_row_id_exist(17, &bitmap3), true);
+            assert_eq!(ConvertUtils::is_row_id_exist(18, &bitmap3), false);
+            assert_eq!(ConvertUtils::is_row_id_exist(25, &bitmap3), false);
+            assert_eq!(ConvertUtils::is_row_id_exist(26, &bitmap3), true);
+            assert_eq!(ConvertUtils::is_row_id_exist(27, &bitmap3), false);
+
+            // 测试用例 4: 空的 bitmap
+            let bitmap4: Vec<u8> = vec![];
+            assert_eq!(ConvertUtils::is_row_id_exist(0, &bitmap4), false);
+            assert_eq!(ConvertUtils::is_row_id_exist(1, &bitmap4), false);
+
         }
     }
 }

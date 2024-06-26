@@ -1,5 +1,3 @@
-use std::sync::Arc;
-use roaring::RoaringBitmap;
 use tantivy::schema::{Field, FieldType, Schema, TextFieldIndexing};
 use tantivy::{Searcher, Term};
 use tantivy::query::BooleanQuery;
@@ -9,7 +7,6 @@ use crate::ERROR;
 use crate::ffi::RowIdWithScore;
 use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
 use crate::search::implements::strategy::query_strategy::QueryStrategy;
-use crate::search::utils::convert_utils::ConvertUtils;
 use crate::common::constants::LOG_CALLBACK;
 use crate::logger::logger_bridge::TantivySearchLogger;
 /// TODO Need Support Multi Column and BM25 Score.
@@ -56,9 +53,10 @@ impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25StandardQueryStrategy<'a> {
 
         // If query_with_filter is false, we regards that don't use alive_bitmap.
         if *self.query_with_filter {
-            let mut alive_bitmap: RoaringBitmap = RoaringBitmap::new();
-            alive_bitmap.extend(ConvertUtils::u8_bitmap_to_row_ids(self.u8_aived_bitmap));
-            top_docs_collector = top_docs_collector.with_alive(Arc::new(alive_bitmap));
+            // let mut alive_bitmap: RoaringBitmap = RoaringBitmap::new();
+            // alive_bitmap.extend(ConvertUtils::u8_bitmap_to_row_ids(self.u8_aived_bitmap));
+            // top_docs_collector = top_docs_collector.with_alive(Arc::new(alive_bitmap));
+            top_docs_collector = top_docs_collector.with_alive_u8(self.u8_aived_bitmap.clone());
         }
 
         let mut terms: Vec<Term> = Vec::new();
