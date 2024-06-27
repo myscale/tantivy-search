@@ -1,4 +1,5 @@
-use crate::common::errors::TantivySearchError;
+use std::path::Path;
+use crate::common::errors::{TantivySearchError, TokenizerUtilsError};
 use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::search::bridge::index_reader_bridge::IndexReaderBridge;
 use crate::search::implements::strategy::query_strategy::QueryExecutor;
@@ -12,6 +13,9 @@ use crate::search::implements::strategy::regex_query::RegexQueryStrategy;
 use crate::search::implements::strategy::sentence_query::SentenceQueryStrategy;
 use crate::search::implements::strategy::single_term_query::SingleTermQueryStrategy;
 use crate::search::implements::strategy::term_set_query::TermSetQueryStrategy;
+use crate::tokenizer::dto::index_parameter_dto::IndexParameterDTO;
+use crate::tokenizer::vo::tokenizer_json_vo::{ColumnTokenizer, Config};
+use crate::utils::index_utils::IndexUtils;
 
 
 /// Execute Term Query in specific rowid range.
@@ -284,10 +288,54 @@ pub fn regex_term_bitmap(
             TantivySearchError::InternalError(e)
         })?;
 
+    // TODO: refine code, refine tokenizer utils code.
+    let index_parameter: IndexParameterDTO =
+        IndexUtils::load_custom_index_setting(Path::new(index_path)).map_err(|e| {
+            ERROR!(function:"regex_term_bitmap", "{}", e);
+            TantivySearchError::IndexUtilsError(e)
+        })?;
+    let config: Config =
+        serde_json::from_str(&index_parameter.tokenizers_json_parameter)
+            .map_err(|e| TokenizerUtilsError::JsonDeserializeError(e.to_string()))?;
+    let mut lower_case = true;
+    let column = config.get_columns().get(column_name);
+    if column.is_some() {
+        match column.unwrap().get_tokenizer() {
+            ColumnTokenizer::Default { .. } => {
+                lower_case=true;
+            }
+            ColumnTokenizer::Raw { .. } => {
+                lower_case=false;
+            }
+            ColumnTokenizer::Simple { case_sensitive, .. } => {
+                lower_case=!case_sensitive;
+            }
+            ColumnTokenizer::Stem { case_sensitive, .. } => {
+                lower_case=!case_sensitive;
+            }
+            ColumnTokenizer::Whitespace { case_sensitive, .. } => {
+                lower_case=!case_sensitive;
+            }
+            ColumnTokenizer::Ngram { case_sensitive, .. } => {
+                lower_case=!case_sensitive;
+            }
+            ColumnTokenizer::Chinese{ case_sensitive, .. } => {
+                lower_case=!case_sensitive;
+            }
+        }
+    }
+
+    let mut pattern_handled = pattern.to_string();
+    if lower_case {
+        // Keep same with Lower Case Tokenizer.
+        pattern_handled.make_ascii_lowercase();
+    }
+
+
     // Choose query strategy to construct query executor.
     let sentence_query: RegexQueryStrategy<'_> = RegexQueryStrategy {
         column_name,
-        pattern,
+        pattern: &pattern_handled,
     };
     let query_executor: QueryExecutor<'_, Arc<RoaringBitmap>> = QueryExecutor::new(&sentence_query);
 

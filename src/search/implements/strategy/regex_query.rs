@@ -32,18 +32,6 @@ impl<'a> QueryStrategy<Arc<RoaringBitmap>> for RegexQueryStrategy<'a> {
             error
         })?;
 
-        // TODO support lower case
-        // let field_entry = schema.get_field_entry(col_field);
-        // if let FieldType::Str(ref str_options) = field_entry.field_type(){
-        //     let tokenizer = str_options.get_indexing_options().unwrap().tokenizer();
-        //     let mut text_analyzer: TextAnalyzer = searcher
-        //         .index()
-        //         .tokenizers()
-        //         .get(tokenizer)
-        //         .unwrap();
-        //     text_analyzer.
-        // }
-
         let row_id_collector: RowIdRoaringCollector =
             RowIdRoaringCollector::with_field("row_id".to_string());
         let regex_query: RegexQuery = RegexQuery::from_pattern(&ConvertUtils::like_to_regex(self.pattern), col_field).map_err(|e|{
