@@ -1,22 +1,21 @@
-use std::path::Path;
-use crate::common::errors::{TantivySearchError, TokenizerUtilsError};
+use crate::common::errors::TantivySearchError;
 use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::search::bridge::index_reader_bridge::IndexReaderBridge;
 use crate::search::implements::strategy::query_strategy::QueryExecutor;
-use crate::search::utils::convert_utils::ConvertUtils;
-use crate::search::utils::index_searcher_utils::FFiIndexSearcherUtils;
-use crate::FFI_INDEX_SEARCHER_CACHE;
-use crate::{common::constants::LOG_CALLBACK, ERROR};
-use roaring::RoaringBitmap;
-use std::sync::Arc;
 use crate::search::implements::strategy::regex_query::RegexQueryStrategy;
 use crate::search::implements::strategy::sentence_query::SentenceQueryStrategy;
 use crate::search::implements::strategy::single_term_query::SingleTermQueryStrategy;
 use crate::search::implements::strategy::term_set_query::TermSetQueryStrategy;
-use crate::tokenizer::dto::index_parameter_dto::IndexParameterDTO;
-use crate::tokenizer::vo::tokenizer_json_vo::{ColumnTokenizer, Config};
+use crate::search::utils::convert_utils::ConvertUtils;
+use crate::search::utils::index_searcher_utils::FFiIndexSearcherUtils;
 use crate::utils::index_utils::IndexUtils;
-
+use crate::FFI_INDEX_SEARCHER_CACHE;
+use crate::{common::constants::LOG_CALLBACK, ERROR};
+use roaring::RoaringBitmap;
+use std::path::Path;
+use std::sync::Arc;
+use crate::tokenizer::ingredient::Config;
+use crate::tokenizer::parser::TokenizerWrapper;
 
 /// Execute Term Query in specific rowid range.
 pub fn query_term_with_range(
@@ -289,40 +288,17 @@ pub fn regex_term_bitmap(
         })?;
 
     // TODO: refine code, refine tokenizer utils code.
-    let index_parameter: IndexParameterDTO =
-        IndexUtils::load_custom_index_setting(Path::new(index_path)).map_err(|e| {
+    let config: Config =
+        IndexUtils::load_tokenizer_config(Path::new(index_path)).map_err(|e| {
             ERROR!(function:"regex_term_bitmap", "{}", e);
             TantivySearchError::IndexUtilsError(e)
         })?;
-    let config: Config =
-        serde_json::from_str(&index_parameter.tokenizers_json_parameter)
-            .map_err(|e| TokenizerUtilsError::JsonDeserializeError(e.to_string()))?;
     let mut lower_case = true;
     let column = config.get_columns().get(column_name);
     if column.is_some() {
-        match column.unwrap().get_tokenizer() {
-            ColumnTokenizer::Default { .. } => {
-                lower_case=true;
-            }
-            ColumnTokenizer::Raw { .. } => {
-                lower_case=false;
-            }
-            ColumnTokenizer::Simple { case_sensitive, .. } => {
-                lower_case=!case_sensitive;
-            }
-            ColumnTokenizer::Stem { case_sensitive, .. } => {
-                lower_case=!case_sensitive;
-            }
-            ColumnTokenizer::Whitespace { case_sensitive, .. } => {
-                lower_case=!case_sensitive;
-            }
-            ColumnTokenizer::Ngram { case_sensitive, .. } => {
-                lower_case=!case_sensitive;
-            }
-            ColumnTokenizer::Chinese{ case_sensitive, .. } => {
-                lower_case=!case_sensitive;
-            }
-        }
+        let tokenizer = column.unwrap().get_tokenizer();
+        let tokenizer_wrapper = TokenizerWrapper::new(tokenizer);
+        lower_case = tokenizer_wrapper.is_lower_case();
     }
 
     let mut pattern_handled = pattern.to_string();
@@ -330,7 +306,6 @@ pub fn regex_term_bitmap(
         // Keep same with Lower Case Tokenizer.
         pattern_handled.make_ascii_lowercase();
     }
-
 
     // Choose query strategy to construct query executor.
     let sentence_query: RegexQueryStrategy<'_> = RegexQueryStrategy {

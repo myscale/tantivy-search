@@ -1,13 +1,13 @@
+use crate::common::constants::LOG_CALLBACK;
+use crate::common::errors::IndexSearcherError;
+use crate::ffi::RowIdWithScore;
+use crate::logger::logger_bridge::TantivySearchLogger;
+use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
+use crate::search::implements::strategy::query_strategy::QueryStrategy;
+use crate::ERROR;
 use tantivy::query::{Query, QueryParser, QueryParserError};
 use tantivy::schema::{Field, Schema};
 use tantivy::{Searcher, TantivyError};
-use crate::common::errors::IndexSearcherError;
-use crate::ERROR;
-use crate::ffi::RowIdWithScore;
-use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
-use crate::search::implements::strategy::query_strategy::QueryStrategy;
-use crate::common::constants::LOG_CALLBACK;
-use crate::logger::logger_bridge::TantivySearchLogger;
 /// Execute query for a sentence and get bm25 score.
 /// Query will be run in all schema fields but `row_id`.
 /// This sentence may be written by natural language, or just simple terms.
@@ -50,7 +50,6 @@ impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25NaturalLanguageStrategy<'a> 
             // alive_bitmap.extend(ConvertUtils::u8_bitmap_to_row_ids(self.u8_aived_bitmap));
             // top_docs_collector = top_docs_collector.with_alive(Arc::new(alive_bitmap));
             top_docs_collector = top_docs_collector.with_alive_u8(self.u8_aived_bitmap.clone());
-
         }
 
         let mut query_parser: QueryParser = QueryParser::for_index(searcher.index(), fields);

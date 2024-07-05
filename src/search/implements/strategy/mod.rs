@@ -1,9 +1,9 @@
-pub mod query_strategy;
-pub mod query_strategy_test;
-pub mod term_set_query;
-pub mod single_term_query;
-pub mod regex_query;
-pub mod sentence_query;
-pub mod parser_query;
 pub mod bm25_natural_language_query;
 pub mod bm25_standard_query;
+pub mod parser_query;
+pub mod query_strategy;
+pub mod query_strategy_test;
+pub mod regex_query;
+pub mod sentence_query;
+pub mod single_term_query;
+pub mod term_set_query;

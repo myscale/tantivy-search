@@ -1,14 +1,14 @@
-use tantivy::schema::{Field, FieldType, Schema, TextFieldIndexing};
-use tantivy::{Searcher, Term};
-use tantivy::query::BooleanQuery;
-use tantivy::tokenizer::{BoxTokenStream, TextAnalyzer};
+use crate::common::constants::LOG_CALLBACK;
 use crate::common::errors::IndexSearcherError;
-use crate::ERROR;
 use crate::ffi::RowIdWithScore;
+use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
 use crate::search::implements::strategy::query_strategy::QueryStrategy;
-use crate::common::constants::LOG_CALLBACK;
-use crate::logger::logger_bridge::TantivySearchLogger;
+use crate::ERROR;
+use tantivy::query::BooleanQuery;
+use tantivy::schema::{Field, FieldType, Schema, TextFieldIndexing};
+use tantivy::tokenizer::{BoxTokenStream, TextAnalyzer};
+use tantivy::{Searcher, Term};
 /// TODO Need Support Multi Column and BM25 Score.
 pub struct BM25StandardQueryStrategy<'a> {
     // pub column_names: &'a Vec<String>,
@@ -39,7 +39,10 @@ impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25StandardQueryStrategy<'a> {
         for col_field in &fields {
             let field_type: &FieldType = schema.get_field_entry(*col_field).field_type();
             if !field_type.is_indexed() {
-                let error_msg: String = format!("column field:{} not indexed.", schema.get_field_name(*col_field));
+                let error_msg: String = format!(
+                    "column field:{} not indexed.",
+                    schema.get_field_name(*col_field)
+                );
                 ERROR!(function:"BM25StandardQueryStrategy", "{}", error_msg);
                 return Err(IndexSearcherError::InternalError(error_msg));
             }
@@ -79,7 +82,8 @@ impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25StandardQueryStrategy<'a> {
                     .get(indexing_options.tokenizer())
                     .unwrap();
 
-                let mut token_stream: BoxTokenStream<'_> = text_analyzer.token_stream(self.sentence);
+                let mut token_stream: BoxTokenStream<'_> =
+                    text_analyzer.token_stream(self.sentence);
                 token_stream.process(&mut |token| {
                     terms.push(Term::from_field_text(*col_field, &token.text));
                 });
@@ -98,7 +102,7 @@ impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25StandardQueryStrategy<'a> {
                     ERROR!(function:"BM25StandardQueryStrategy", "{}", e);
                     IndexSearcherError::TantivyError(e)
                 })
-        }else {
+        } else {
             let boolean_query = BooleanQuery::new_multiterms_and_query(terms);
             searcher
                 .search(&boolean_query, &top_docs_collector)

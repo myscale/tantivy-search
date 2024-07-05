@@ -107,9 +107,9 @@ impl ConvertUtils {
 #[cfg(test)]
 mod tests {
     mod convert_utils {
-        use std::time::Instant;
-        use roaring::RoaringBitmap;
         use super::super::*;
+        use roaring::RoaringBitmap;
+        use std::time::Instant;
 
         #[test]
         fn test_like_to_regex() {
@@ -261,24 +261,39 @@ mod tests {
         fn test_massive_u8_bitmap_convert() {
             let start_1 = Instant::now();
             let mut row_ids_u8: Vec<u8> = vec![];
-            for i in 0..200000000/8 {
+            for i in 0..200000000 / 8 {
                 row_ids_u8.push(255)
             }
-            println!("generate u8 vector, size: {:?} consume: {:?}", row_ids_u8.len(), start_1.elapsed());
+            println!(
+                "generate u8 vector, size: {:?} consume: {:?}",
+                row_ids_u8.len(),
+                start_1.elapsed()
+            );
 
             let start_2 = Instant::now();
             let row_ids_u32 = ConvertUtils::u8_bitmap_to_row_ids(&row_ids_u8);
-            println!("convert vec[u8] -> vec[u32], size: {:?} consume: {:?}", row_ids_u32.len(), start_2.elapsed());
+            println!(
+                "convert vec[u8] -> vec[u32], size: {:?} consume: {:?}",
+                row_ids_u32.len(),
+                start_2.elapsed()
+            );
 
             let start_3 = Instant::now();
             let mut alive_bitmap: RoaringBitmap = RoaringBitmap::new();
             alive_bitmap.extend(row_ids_u32);
-            println!("convert vec[u32] -> roaring, size: {:?} consume: {:?}", alive_bitmap.len(), start_3.elapsed());
+            println!(
+                "convert vec[u32] -> roaring, size: {:?} consume: {:?}",
+                alive_bitmap.len(),
+                start_3.elapsed()
+            );
 
             let start_4 = Instant::now();
             let directly_convert_res = ConvertUtils::u8_bitmap_to_roaring(&row_ids_u8);
-            println!("directly convert vec[u8] -> roaring, size: {:?} consume: {:?}", directly_convert_res.len(), start_4.elapsed());
-
+            println!(
+                "directly convert vec[u8] -> roaring, size: {:?} consume: {:?}",
+                directly_convert_res.len(),
+                start_4.elapsed()
+            );
         }
 
         #[test]
@@ -315,7 +330,6 @@ mod tests {
             let bitmap4: Vec<u8> = vec![];
             assert_eq!(ConvertUtils::is_row_id_exist(0, &bitmap4), false);
             assert_eq!(ConvertUtils::is_row_id_exist(1, &bitmap4), false);
-
         }
     }
 }

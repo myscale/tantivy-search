@@ -6,8 +6,8 @@ use tantivy::query::Weight;
 use tantivy::schema::Field;
 use tantivy::{DocAddress, DocId, Score, Searcher, SegmentOrdinal, SegmentReader};
 
-use crate::RowIdWithScore;
 use crate::search::utils::convert_utils::ConvertUtils;
+use crate::RowIdWithScore;
 
 // Class Inheritance Diagram:
 //
@@ -186,7 +186,10 @@ impl Collector for TopDocsWithFilter {
             weight.for_each_pruning(threshold, reader, &mut |doc, score| {
                 let row_id = row_id_field_reader.get_val(doc);
                 if self.row_id_u8.is_some()
-                    && !ConvertUtils::is_row_id_exist(row_id as u32, &self.row_id_u8.as_ref().unwrap())
+                    && !ConvertUtils::is_row_id_exist(
+                        row_id as u32,
+                        &self.row_id_u8.as_ref().unwrap(),
+                    )
                 {
                     return threshold;
                 }
@@ -215,7 +218,10 @@ impl Collector for TopDocsWithFilter {
             weight.for_each_pruning(Score::MIN, reader, &mut |doc, score| {
                 let row_id = row_id_field_reader.get_val(doc);
                 if self.row_id_u8.is_some()
-                    && !ConvertUtils::is_row_id_exist(row_id as u32, &self.row_id_u8.as_ref().unwrap())
+                    && !ConvertUtils::is_row_id_exist(
+                        row_id as u32,
+                        &self.row_id_u8.as_ref().unwrap(),
+                    )
                 {
                     return Score::MIN;
                 }

@@ -1,39 +1,37 @@
 #[cfg(test)]
 mod tests {
+    use crate::ffi::RowIdWithScore;
+    use crate::index::implements::api_index_impl::create_index_with_parameter;
+    use crate::search::bridge::index_reader_bridge::IndexReaderBridge;
+    use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
+    use crate::search::implements::api_common_impl::load_index_reader;
+    use crate::search::implements::strategy::bm25_natural_language_query::BM25NaturalLanguageStrategy;
+    use crate::search::implements::strategy::bm25_standard_query::BM25StandardQueryStrategy;
+    use crate::search::implements::strategy::query_strategy::QueryExecutor;
+    use crate::{FFI_INDEX_SEARCHER_CACHE, FFI_INDEX_WRITER_CACHE, TEST_MUTEX};
     use std::ffi::{c_char, CString};
     use std::sync::Arc;
     use tantivy::query::{Query, QueryParser};
     use tantivy::schema::{Schema, FAST, INDEXED, TEXT};
     use tantivy::Document;
     use tempfile::TempDir;
-    use crate::ffi::RowIdWithScore;
-    use crate::index::implements::api_index_impl::
-        create_index_with_parameter
-    ;
-    use crate::search::bridge::index_reader_bridge::IndexReaderBridge;
-    use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
-    use crate::search::implements::api_common_impl::load_index_reader;
-    use crate::search::implements::strategy::bm25_natural_language_query::BM25NaturalLanguageStrategy;
-    use crate::search::implements::strategy::query_strategy::{QueryExecutor};
-    use crate::{FFI_INDEX_SEARCHER_CACHE, FFI_INDEX_WRITER_CACHE, TEST_MUTEX};
-    use crate::search::implements::strategy::bm25_standard_query::BM25StandardQueryStrategy;
 
     fn to_c_str(s: &str) -> *const c_char {
         CString::new(s).unwrap().into_raw()
     }
 
-    pub fn test_create_index_with_valid_tokenizer(tokenizer_str:&str) {
+    pub fn test_create_index_with_valid_tokenizer(tokenizer_str: &str) {
         let _guard = TEST_MUTEX.lock().unwrap();
         let _log_directory = to_c_str("/tmp");
         let _log_level = to_c_str("info"); // Assuming this is an invalid log level.
-        // tantivy_search_log4rs_initialize(log_directory, log_level, false, true, false);
+                                           // tantivy_search_log4rs_initialize(log_directory, log_level, false, true, false);
         let temp_directory = TempDir::new().unwrap();
         let temp_directory_str = temp_directory.path().to_str().unwrap();
 
         let result = create_index_with_parameter(
             temp_directory_str,
             &vec!["col1".to_string()],
-            tokenizer_str
+            tokenizer_str,
         );
         assert!(result.is_ok());
 
@@ -85,7 +83,6 @@ mod tests {
         let row_id_field = schema.get_field("row_id").unwrap();
         let col1_field = schema.get_field("col1").unwrap();
 
-
         for row_id in 0..mocked_docs.len() {
             let mut doc = Document::default();
             doc.add_u64(row_id_field, row_id as u64);
@@ -97,26 +94,31 @@ mod tests {
         assert!(load_index_reader(temp_directory_str).is_ok());
 
         let index_reader_bridge: Arc<IndexReaderBridge> = FFI_INDEX_SEARCHER_CACHE
-            .get_index_reader_bridge(temp_directory_str.to_string()).unwrap();
+            .get_index_reader_bridge(temp_directory_str.to_string())
+            .unwrap();
         let parser = QueryParser::for_index(&index_writer_bridge.index, vec![col1_field]);
-        let top_docs_collector: TopDocsWithFilter =
-        TopDocsWithFilter::with_limit(10)
+        let top_docs_collector: TopDocsWithFilter = TopDocsWithFilter::with_limit(10)
             .with_searcher(index_reader_bridge.reader.searcher().clone())
-            .with_text_fields(vec![col1_field.clone()]);     
-
+            .with_text_fields(vec![col1_field.clone()]);
 
         // let sentence = "冥想能够对身体健康有帮助吗";
         let sentence = "Elon Musk 是否能够使得世界经济繁荣";
         println!("\n----query en-zh `QueryParser`: {:?}-----", sentence);
         let text_query: Box<dyn Query> = parser.parse_query(sentence).unwrap();
-        let result = index_reader_bridge.reader.searcher().search(&text_query, &top_docs_collector).unwrap();
+        let result = index_reader_bridge
+            .reader
+            .searcher()
+            .search(&text_query, &top_docs_collector)
+            .unwrap();
         println!("searched res count:{:?}", result.len());
         for re in result {
             println!("rowid with score is: {:?}", re);
         }
 
-
-        println!("\n----query english-zh `BM25StandardQueryStrategy`: {:?}-----", sentence);
+        println!(
+            "\n----query english-zh `BM25StandardQueryStrategy`: {:?}-----",
+            sentence
+        );
         let bm25_sentence_strategy: BM25StandardQueryStrategy<'_> = BM25StandardQueryStrategy {
             // column_names: &vec!["col1".to_string()],
             sentence,
@@ -130,14 +132,18 @@ mod tests {
             QueryExecutor::new(&bm25_sentence_strategy);
 
         // Compute query results.
-        let result: Vec<RowIdWithScore> = query_executor.execute(&index_reader_bridge.reader.searcher()).unwrap();
+        let result: Vec<RowIdWithScore> = query_executor
+            .execute(&index_reader_bridge.reader.searcher())
+            .unwrap();
         println!("searched res count:{:?}", result.len());
         for re in result {
             println!("rowid with score is: {:?}", re);
         }
 
-
-        println!("\n----query english-zh `BM25NaturalLanguageStrategy`: {:?}-----", sentence);
+        println!(
+            "\n----query english-zh `BM25NaturalLanguageStrategy`: {:?}-----",
+            sentence
+        );
         let bm25_nlq_strategy: BM25NaturalLanguageStrategy<'_> = BM25NaturalLanguageStrategy {
             // column_names: &vec!["col1".to_string()],
             sentence,
@@ -151,23 +157,28 @@ mod tests {
             QueryExecutor::new(&bm25_nlq_strategy);
 
         // Compute query results.
-        let result: Vec<RowIdWithScore> = query_executor.execute(&index_reader_bridge.reader.searcher()).unwrap();
+        let result: Vec<RowIdWithScore> = query_executor
+            .execute(&index_reader_bridge.reader.searcher())
+            .unwrap();
         println!("searched res count:{:?}", result.len());
         for re in result {
             println!("rowid with score is: {:?}", re);
         }
 
         println!("num cpus is {:?}", num_cpus::get());
-
     }
-
 
     #[test]
     pub fn test_different_tokenizers() {
         let zh_char = '哈';
         println!("哈 is_alphanumeric {:?}", zh_char.is_alphanumeric());
-        println!("{:?}", "{\"col1\":{\"tokenizer\":{\"type\":\"simple\", \"case_sensitive\":false}}}");
-        test_create_index_with_valid_tokenizer("{\"col1\":{\"tokenizer\":{\"type\":\"simple\", \"case_sensitive\":false}}}");
+        println!(
+            "{:?}",
+            "{\"col1\":{\"tokenizer\":{\"type\":\"simple\", \"case_sensitive\":false}}}"
+        );
+        test_create_index_with_valid_tokenizer(
+            "{\"col1\":{\"tokenizer\":{\"type\":\"simple\", \"case_sensitive\":false}}}",
+        );
 
         // println!("{:?}", "{\"col1\":{\"tokenizer\":{\"type\":\"stem\",\"stop_word_filters\":[\"english\"]}}}");
         // test_create_index_with_valid_tokenizer("{\"col1\":{\"tokenizer\":{\"type\":\"stem\",\"stop_word_filters\":[\"english\"]}}}");

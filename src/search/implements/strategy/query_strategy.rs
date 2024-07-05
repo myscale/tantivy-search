@@ -1,5 +1,5 @@
-use tantivy::Searcher;
 use crate::common::errors::IndexSearcherError;
+use tantivy::Searcher;
 
 pub trait QueryStrategy<T> {
     fn execute(&self, searcher: &Searcher) -> Result<T, IndexSearcherError>;

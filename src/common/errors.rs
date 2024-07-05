@@ -45,6 +45,30 @@ pub enum IndexUtilsError {
 
 #[derive(Debug, Clone, Error)]
 #[allow(dead_code)]
+pub enum TantivySearchTokenizerError {
+    #[error("Failed to deserialize index parameter. '{0}'")]
+    JsonDeserializeError(String),
+    #[error("Failed to serialize index parameter. '{0}'")]
+    JsonSerializeError(String),
+    #[error("Failed to read index parameter from file. '{0}'")]
+    ReadFileError(String),
+
+    #[error("Failed to remove directory. '{0}'")]
+    RemoveDirectoryError(String),
+    #[error("Error happened when create directory. '{0}'")]
+    CreateDirectoryError(String),
+    #[error("Error happened when write file. '{0}'")]
+    WriteFileError(String),
+
+    #[error("Failed to build TextAnalyzer. '{0}'")]
+    BuildTokenizerError(String),
+
+    #[error("Failed to build TextAnalyzer, TantivyError happened: '{0}'")]
+    TantivyError(#[from] TantivyError),
+}
+
+#[derive(Debug, Clone, Error)]
+#[allow(dead_code)]
 pub enum IndexSearcherError {
     #[error("Missing field/column in tantivy schema. '{0}'")]
     MissingFieldError(String),
@@ -90,6 +114,9 @@ pub enum TantivySearchError {
 
     #[error(transparent)]
     TokenizerUtilsError(#[from] TokenizerUtilsError),
+
+    #[error(transparent)]
+    TantivySearchTokenizerError(#[from] TantivySearchTokenizerError),
 
     #[error(transparent)]
     IndexSearcherError(#[from] IndexSearcherError),

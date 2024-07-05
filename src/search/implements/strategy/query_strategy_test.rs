@@ -6,16 +6,13 @@ mod tests {
 
     use tempfile::TempDir;
 
-    use crate::{
-        common::tests::index_3column_docs_with_threads_merge,
-        ffi::RowIdWithScore,
-    };
     use crate::search::implements::strategy::bm25_natural_language_query::BM25NaturalLanguageStrategy;
     use crate::search::implements::strategy::parser_query::ParserQueryStrategy;
     use crate::search::implements::strategy::query_strategy::QueryExecutor;
     use crate::search::implements::strategy::regex_query::RegexQueryStrategy;
     use crate::search::implements::strategy::single_term_query::SingleTermQueryStrategy;
     use crate::search::implements::strategy::term_set_query::TermSetQueryStrategy;
+    use crate::{common::tests::index_3column_docs_with_threads_merge, ffi::RowIdWithScore};
 
     #[test]
     fn test_term_set_query_strategy() {

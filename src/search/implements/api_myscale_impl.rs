@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use tantivy::query::Bm25StatisticsProvider;
 use tantivy::reader::multi_parts_statistics::MultiPartsStatistics;
 use tantivy::schema::Field;
@@ -7,13 +8,15 @@ use tantivy::schema::TextFieldIndexing;
 use tantivy::tokenizer::BoxTokenStream;
 use tantivy::tokenizer::TextAnalyzer;
 use tantivy::Term;
-use std::collections::HashSet;
 
+use super::strategy::query_strategy::QueryExecutor;
+use super::strategy::query_strategy::QueryStrategy;
 use crate::common::errors::TantivySearchError;
 use crate::ffi::DocWithFreq;
 use crate::ffi::Statistics;
 use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::search::bridge::index_reader_bridge::IndexReaderBridge;
+use crate::search::implements::strategy::bm25_natural_language_query::BM25NaturalLanguageStrategy;
 use crate::search::implements::strategy::bm25_standard_query::BM25StandardQueryStrategy;
 use crate::RowIdWithScore;
 use crate::DEBUG;
@@ -21,17 +24,14 @@ use crate::FFI_INDEX_SEARCHER_CACHE;
 use crate::{common::constants::LOG_CALLBACK, ERROR};
 use std::collections::HashMap;
 use std::sync::Arc;
-use crate::search::implements::strategy::bm25_natural_language_query::BM25NaturalLanguageStrategy;
-use super::strategy::query_strategy::QueryExecutor;
-use super::strategy::query_strategy::QueryStrategy;
 
 fn bm25_inner_search(
     index_path: &str,
     statistics: &Statistics,
-    strategy: &dyn QueryStrategy<Vec<RowIdWithScore>>
+    strategy: &dyn QueryStrategy<Vec<RowIdWithScore>>,
 ) -> Result<Vec<RowIdWithScore>, TantivySearchError> {
-        // Get index_reader_bridge from CACHE
-        let index_reader_bridge: Arc<IndexReaderBridge> = FFI_INDEX_SEARCHER_CACHE
+    // Get index_reader_bridge from CACHE
+    let index_reader_bridge: Arc<IndexReaderBridge> = FFI_INDEX_SEARCHER_CACHE
         .get_index_reader_bridge(index_path.to_string())
         .map_err(|e| {
             ERROR!(function:"bm25_inner_search", "{}", e);
@@ -39,8 +39,7 @@ fn bm25_inner_search(
         })?;
 
     // Choose query strategy to construct query executor.
-    let query_executor: QueryExecutor<'_, Vec<RowIdWithScore>> =
-        QueryExecutor::new(strategy);
+    let query_executor: QueryExecutor<'_, Vec<RowIdWithScore>> = QueryExecutor::new(strategy);
 
     let searcher = &mut index_reader_bridge.reader.searcher();
 
@@ -89,7 +88,6 @@ fn bm25_inner_search(
     Ok(result)
 }
 
-
 pub fn bm25_natural_language_search(
     index_path: &str,
     sentence: &str,
@@ -101,18 +99,18 @@ pub fn bm25_natural_language_search(
     need_doc: bool,
 ) -> Result<Vec<RowIdWithScore>, TantivySearchError> {
     // Choose query strategy to construct query executor.
-    let bm25_natural_language_query: BM25NaturalLanguageStrategy<'_> = BM25NaturalLanguageStrategy {
-        sentence,
-        topk: &topk,
-        u8_aived_bitmap,
-        query_with_filter: &query_with_filter,
-        need_doc: &need_doc,
-        operation_or: &operation_or,
-    };
+    let bm25_natural_language_query: BM25NaturalLanguageStrategy<'_> =
+        BM25NaturalLanguageStrategy {
+            sentence,
+            topk: &topk,
+            u8_aived_bitmap,
+            query_with_filter: &query_with_filter,
+            need_doc: &need_doc,
+            operation_or: &operation_or,
+        };
 
     bm25_inner_search(index_path, statistics, &bm25_natural_language_query)
 }
-
 
 pub fn bm25_standard_search(
     index_path: &str,
@@ -136,7 +134,6 @@ pub fn bm25_standard_search(
 
     bm25_inner_search(index_path, statistics, &bm25_standard_query)
 }
-
 
 pub fn get_doc_freq(
     index_path: &str,

@@ -239,7 +239,6 @@ pub mod ffi {
             statistics: &Statistics,
         ) -> Vec<RowIdWithScore>;
 
-
         /// Get doc freq for current part.
         /// arguments:
         /// - `index_path`: index directory.

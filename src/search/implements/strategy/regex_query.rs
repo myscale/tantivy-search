@@ -1,15 +1,15 @@
-use std::sync::Arc;
-use roaring::RoaringBitmap;
-use tantivy::query::RegexQuery;
-use tantivy::schema::{Field, Schema};
-use tantivy::Searcher;
-use crate::common::errors::IndexSearcherError;
 use crate::common::constants::LOG_CALLBACK;
+use crate::common::errors::IndexSearcherError;
 use crate::logger::logger_bridge::TantivySearchLogger;
-use crate::ERROR;
 use crate::search::collector::row_id_bitmap_collector::RowIdRoaringCollector;
 use crate::search::implements::strategy::query_strategy::QueryStrategy;
 use crate::search::utils::convert_utils::ConvertUtils;
+use crate::ERROR;
+use roaring::RoaringBitmap;
+use std::sync::Arc;
+use tantivy::query::RegexQuery;
+use tantivy::schema::{Field, Schema};
+use tantivy::Searcher;
 
 /// Execute regex query for a given pattern.
 ///

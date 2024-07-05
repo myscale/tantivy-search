@@ -1,15 +1,15 @@
-use std::sync::Arc;
-use roaring::RoaringBitmap;
-use tantivy::schema::{Field, FieldType, Schema, TextFieldIndexing};
-use tantivy::{Searcher, Term};
-use tantivy::query::TermSetQuery;
-use tantivy::tokenizer::{BoxTokenStream, TextAnalyzer};
-use crate::common::errors::IndexSearcherError;
 use crate::common::constants::LOG_CALLBACK;
+use crate::common::errors::IndexSearcherError;
 use crate::logger::logger_bridge::TantivySearchLogger;
-use crate::ERROR;
 use crate::search::collector::row_id_bitmap_collector::RowIdRoaringCollector;
 use crate::search::implements::strategy::query_strategy::QueryStrategy;
+use crate::ERROR;
+use roaring::RoaringBitmap;
+use std::sync::Arc;
+use tantivy::query::TermSetQuery;
+use tantivy::schema::{Field, FieldType, Schema, TextFieldIndexing};
+use tantivy::tokenizer::{BoxTokenStream, TextAnalyzer};
+use tantivy::{Searcher, Term};
 
 /// Execute query for a group of terms.
 ///

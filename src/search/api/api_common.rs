@@ -17,13 +17,10 @@ pub fn ffi_load_index_reader(index_path: &CxxString) -> bool {
         }
     };
 
-    match load_index_reader(&index_path) {
-        Ok(status) => status,
-        Err(e) => {
-            ERROR!(function: "ffi_load_index_reader", "Error loading index reader: {}", e);
-            false
-        }
-    }
+    load_index_reader(&index_path).unwrap_or_else(|e| {
+        ERROR!(function: "ffi_load_index_reader", "Error loading index reader: {}", e);
+        false
+    })
 }
 
 pub fn ffi_free_index_reader(index_path: &CxxString) -> bool {
@@ -35,13 +32,10 @@ pub fn ffi_free_index_reader(index_path: &CxxString) -> bool {
         }
     };
 
-    match free_index_reader(&index_path) {
-        Ok(status) => status,
-        Err(e) => {
-            ERROR!(function: "ffi_free_index_reader", "Error free index reader: {}", e);
-            false
-        }
-    }
+    free_index_reader(&index_path).unwrap_or_else(|e| {
+        ERROR!(function: "ffi_free_index_reader", "Error free index reader: {}", e);
+        false
+    })
 }
 
 pub fn ffi_get_indexed_doc_counts(index_path: &CxxString) -> u64 {
@@ -53,11 +47,8 @@ pub fn ffi_get_indexed_doc_counts(index_path: &CxxString) -> u64 {
         }
     };
 
-    match get_indexed_doc_counts(&index_path) {
-        Ok(count) => count,
-        Err(e) => {
-            ERROR!(function: "ffi_get_indexed_doc_counts", "Error getting indexed doc counts: {}", e);
-            0
-        }
-    }
+    get_indexed_doc_counts(&index_path).unwrap_or_else(|e| {
+        ERROR!(function: "ffi_get_indexed_doc_counts", "Error getting indexed doc counts: {}", e);
+        0
+    })
 }

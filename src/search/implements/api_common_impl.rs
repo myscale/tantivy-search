@@ -1,7 +1,5 @@
 use crate::common::errors::TantivySearchError;
 use crate::logger::logger_bridge::TantivySearchLogger;
-use crate::tokenizer::dto::index_parameter_dto::IndexParameterDTO;
-use crate::tokenizer::vo::tokenizers_vo::TokenizerConfig;
 use crate::utils::index_utils::IndexUtils;
 use crate::DEBUG;
 use crate::FFI_INDEX_SEARCHER_CACHE;
@@ -12,10 +10,11 @@ use crate::{common::constants::LOG_CALLBACK, ERROR};
 use std::{path::Path, sync::Arc};
 
 use crate::search::bridge::index_reader_bridge::IndexReaderBridge;
-use crate::tokenizer::tokenizer_utils::ToeknizerUtils;
+use crate::tokenizer::parser::{TantivySearchTokenizerConfig, TantivySearchTokenizerUtils};
 use std::collections::HashMap;
 use tantivy::IndexReader;
 use tantivy::{Index, ReloadPolicy};
+use crate::tokenizer::ingredient::Config;
 
 pub fn load_index_reader(index_path: &str) -> Result<bool, TantivySearchError> {
     // Verify index files directory.
@@ -51,37 +50,28 @@ pub fn load_index_reader(index_path: &str) -> Result<bool, TantivySearchError> {
         error
     })?;
 
-    // Load index parameter DTO from local index files.
-    let index_parameter_dto: IndexParameterDTO =
-        IndexUtils::load_custom_index_setting(index_files_directory).map_err(|e| {
+    // Load tokenizer config from local directory.
+    let tokenizer_config: Config =
+        IndexUtils::load_tokenizer_config(index_files_directory).map_err(|e| {
             ERROR!(function:"load_index_reader", "{}", e);
             TantivySearchError::IndexUtilsError(e)
         })?;
 
-    DEBUG!(function:"load_index_reader", "parameter DTO is {:?}", index_parameter_dto);
+    DEBUG!(function:"load_index_reader", "tokenizer config is {:?}", tokenizer_config);
 
     // Parse tokenizer map from local index parameter DTO.
-    let col_tokenizer_map: HashMap<String, TokenizerConfig> =
-        ToeknizerUtils::parse_tokenizer_json_to_config_map(
-            &index_parameter_dto.tokenizers_json_parameter,
-        )
+    let col_tokenizer_map: HashMap<String, TantivySearchTokenizerConfig> =
+        TantivySearchTokenizerUtils::parser_from_tokenizer_config(tokenizer_config)
         .map_err(|e| {
             ERROR!(function:"load_index_reader", "{}", e);
-            TantivySearchError::TokenizerUtilsError(e)
+            TantivySearchError::TantivySearchTokenizerError(e)
         })?;
 
     // Register tokenizer config into `index`.
+    // TODO 封装成一个函数
     for (column_name, tokenizer_config) in col_tokenizer_map.iter() {
-        ToeknizerUtils::register_tokenizer_to_index(
-            &mut index,
-            tokenizer_config.tokenizer_type.clone(),
-            &column_name,
-            tokenizer_config.text_analyzer.clone(),
-        )
-        .map_err(|e| {
-            ERROR!(function:"load_index_reader", "{}", e);
-            TantivySearchError::TokenizerUtilsError(e)
-        })?;
+        let tokenizer_name = format!("{}_{}", column_name, tokenizer_config.tokenizer_name);
+        index.tokenizers().register(&tokenizer_name, tokenizer_config.text_analyzer.clone());
     }
 
     #[cfg(feature = "use-shared-search-pool")]

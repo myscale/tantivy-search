@@ -13,14 +13,12 @@ use crate::common::errors::TantivySearchError;
 use crate::index::bridge::index_writer_bridge::IndexWriterBridge;
 use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::search::implements::api_common_impl::free_index_reader;
-use crate::tokenizer::dto::index_parameter_dto::IndexParameterDTO;
-use crate::tokenizer::tokenizer_utils::ToeknizerUtils;
-use crate::tokenizer::vo::tokenizers_vo::TokenizerConfig;
 use crate::utils::index_utils::IndexUtils;
 use crate::{common::constants::LOG_CALLBACK, DEBUG, ERROR, INFO, WARNING};
 use crate::{FFI_INDEX_SEARCHER_CACHE, FFI_INDEX_WRITER_CACHE};
 
 use tantivy::{Document, Index, Term};
+use crate::tokenizer::parser::{TantivySearchTokenizerConfig, TantivySearchTokenizerUtils};
 
 pub fn create_index_with_parameter(
     index_path: &str,
@@ -43,26 +41,21 @@ pub fn create_index_with_parameter(
 
     // Initialize the index directory, it will store tantivy index files.
     let index_files_directory: &Path = Path::new(index_path);
-    IndexUtils::initialize_index_directory(index_files_directory)?;
 
-    // Save custom index json parameter DTO to index directory.
-    let index_parameter_dto = IndexParameterDTO {
-        tokenizers_json_parameter: index_json_parameter.to_string(),
-    };
-
-    DEBUG!(function:"create_index_with_parameter", "parameter DTO:{:?}", index_parameter_dto);
-
-    IndexUtils::save_custom_index_setting(index_files_directory, &index_parameter_dto)?;
+    // FixMe: support more custom settings.
+    IndexUtils::save_index_parameter_to_disk(
+        index_files_directory,
+        index_json_parameter.to_string(),
+        true
+    )?;
 
     // Parse tokenizer map from local index parameter DTO.
-    let col_tokenizer_map: HashMap<String, TokenizerConfig> =
-        ToeknizerUtils::parse_tokenizer_json_to_config_map(
-            &index_parameter_dto.tokenizers_json_parameter,
-        )
-        .map_err(|e| {
-            ERROR!("{}", e.to_string());
-            TantivySearchError::TokenizerUtilsError(e)
-        })?;
+    let col_tokenizer_map: HashMap<String, TantivySearchTokenizerConfig> =
+        TantivySearchTokenizerUtils::parser_index_json_parameter(index_json_parameter)
+            .map_err(|e| {
+                ERROR!("{}", e.to_string());
+                TantivySearchError::TantivySearchTokenizerError(e)
+            })?;
 
     // Construct the schema for the index.
     let mut schema_builder = Schema::builder();
@@ -71,7 +64,7 @@ pub fn create_index_with_parameter(
     for column_name in column_names {
         if let Some(tokenizer_config) = col_tokenizer_map.get(column_name) {
             let tokenizer_name =
-                format!("{}_{}", column_name, tokenizer_config.tokenizer_type.name());
+                format!("{}_{}", column_name, tokenizer_config.tokenizer_name);
             let mut text_options = TextOptions::default().set_indexing_options(
                 TextFieldIndexing::default()
                     .set_tokenizer(&tokenizer_name)
@@ -100,7 +93,7 @@ pub fn create_index_with_parameter(
     );
 
     // Create the index in the specified directory.
-    let mut index = Index::create_in_dir(index_files_directory, schema).map_err(|e| {
+    let index = Index::create_in_dir(index_files_directory, schema).map_err(|e| {
         let error_info = format!(
             "Failed to create index in directory:{}; exception:{}",
             index_path,
@@ -112,16 +105,8 @@ pub fn create_index_with_parameter(
 
     // Register the tokenizer with the index.
     for (col_name, tokenizer_config) in col_tokenizer_map.iter() {
-        ToeknizerUtils::register_tokenizer_to_index(
-            &mut index,
-            tokenizer_config.tokenizer_type.clone(),
-            &col_name,
-            tokenizer_config.text_analyzer.clone(),
-        )
-        .map_err(|e| {
-            ERROR!(function:"create_index_with_parameter", "{}", e.to_string());
-            TantivySearchError::TokenizerUtilsError(e)
-        })?;
+        let tokenizer_name = format!("{}_{}", col_name, tokenizer_config.tokenizer_name);
+        index.tokenizers().register(&tokenizer_name, tokenizer_config.text_analyzer.clone());
     }
 
     // Create the writer with a specified buffer size (e.g., 64 MB).
