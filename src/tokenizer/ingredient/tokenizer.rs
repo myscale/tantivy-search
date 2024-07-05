@@ -88,6 +88,18 @@ pub enum Tokenizer {
         #[serde(default)]
         case_sensitive: bool,
     },
+    #[serde(rename = "icu")]
+    Icu {
+        #[serde(
+            default = "icu_mode_default",
+            deserialize_with = "icu_mode_validator"
+        )]
+        mode: String,
+        #[serde(default)]
+        store_doc: bool,
+        #[serde(default)]
+        case_sensitive: bool,
+    },
 }
 
 fn default_length_limit() -> usize {
@@ -173,6 +185,22 @@ where
 }
 
 
+fn icu_mode_default() -> String { "word".to_string() }
+
+fn icu_mode_validator<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let mode = String::deserialize(deserializer)?;
+    static VALID_MODE: &[&str] = &["grapheme", "line", "sentence", "word"];
+    if !VALID_MODE.contains(&mode.as_str()) {
+        return Err(serde::de::Error::custom(format!(
+            "Invalid value for mode: {}. Expected {:?}.",
+            mode, VALID_MODE
+        )));
+    }
+    Ok(mode)
+}
 
 
 #[cfg(test)]
@@ -591,6 +619,68 @@ mod tests {
                 "jieba": "default",
                 "mode: "all",
                 "hmm": true,
+                "store_doc": false,
+                "case_sensitive": false
+            }
+        "#;
+        let invalid_tokenizer_3: Result<Tokenizer, _> = serde_json::from_str(invalid_json_3);
+        assert!(invalid_tokenizer_3.is_err());
+    }
+
+
+    #[test]
+    fn test_deserialize_icu() {
+        let json_str = r#"
+            {
+                "type": "icu",
+                "mode": "word",
+                "store_doc": false,
+                "case_sensitive": false
+            }
+        "#;
+        let tokenizer: Tokenizer = serde_json::from_str(json_str).unwrap();
+        match tokenizer {
+            Tokenizer::Icu {
+                mode,
+                store_doc,
+                case_sensitive,
+            } => {
+                assert_eq!(mode, "word");
+                assert!(!store_doc);
+                assert!(!case_sensitive);
+            }
+            _ => panic!("Unexpected variant"),
+        }
+
+        // invalid value type
+        let invalid_json_1 = r#"
+            {
+                "type": "icu",
+                "mode": 0,
+                "store_doc": false,
+                "case_sensitive": false
+            }
+        "#;
+        let invalid_tokenizer_1: Result<Tokenizer, _> = serde_json::from_str(invalid_json_1);
+        assert!(invalid_tokenizer_1.is_err());
+
+        // invalid value
+        let invalid_json_2 = r#"
+            {
+                "type": "icu",
+                "mode": "all",
+                "store_doc": false,
+                "case_sensitive": false
+            }
+        "#;
+        let invalid_tokenizer_2: Result<Tokenizer, _> = serde_json::from_str(invalid_json_2);
+        assert!(invalid_tokenizer_2.is_err());
+
+        // invalid key
+        let invalid_json_3 = r#"
+            {
+                "type": "icu",
+                "hnm": false,
                 "store_doc": false,
                 "case_sensitive": false
             }

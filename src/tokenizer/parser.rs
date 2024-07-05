@@ -5,6 +5,7 @@ use jieba_rs::Jieba;
 use tantivy::tokenizer::{LowerCaser, NgramTokenizer, RawTokenizer, RemoveLongFilter, SimpleTokenizer, Stemmer, StopWordFilter, TextAnalyzer, WhitespaceTokenizer};
 use crate::common::errors::TantivySearchTokenizerError;
 use crate::tokenizer::core::cangjie::{CangJieTokenizer, TokenizerOption};
+use crate::tokenizer::core::multilang::{IcuOption, IcuTokenizer};
 use crate::tokenizer::ingredient::{Config, Tokenizer};
 use crate::tokenizer::languages::{SupportFilterLanguage, SupportLanguageAlgorithm};
 
@@ -41,7 +42,8 @@ impl<'a> TokenizerWrapper<'a> {
             | Tokenizer::Stem { store_doc, .. }
             | Tokenizer::Whitespace { store_doc, .. }
             | Tokenizer::Ngram { store_doc, .. }
-            | Tokenizer::Chinese { store_doc, .. } => *store_doc
+            | Tokenizer::Chinese { store_doc, .. }
+            | Tokenizer::Icu { store_doc, .. } => *store_doc
         }
     }
 
@@ -53,6 +55,7 @@ impl<'a> TokenizerWrapper<'a> {
             | Tokenizer::Stem { case_sensitive, .. }
             | Tokenizer::Whitespace { case_sensitive, .. }
             | Tokenizer::Ngram { case_sensitive, .. }
+            | Tokenizer::Icu { case_sensitive, .. }
             | Tokenizer::Chinese { case_sensitive, .. } => !*case_sensitive
         };
         return lower_case;
@@ -230,6 +233,29 @@ impl<'a> TokenizerWrapper<'a> {
                 }
                 Ok(builder.build())
             }
+
+            Tokenizer::Icu {
+                mode,
+                case_sensitive,
+                ..
+            } => {
+                let tokenizer_option: IcuOption = match mode.as_str() {
+                    "grapheme" => IcuOption::Grapheme,
+                    "line" => IcuOption::Line,
+                    "sentence" => IcuOption::Sentence,
+                    "word" => IcuOption::Word,
+                    _ => IcuOption::Word, // default option
+                };
+
+                let mut builder = TextAnalyzer::builder(IcuTokenizer {
+                    option: tokenizer_option,
+                }).dynamic();
+
+                if *case_sensitive == false {
+                    builder = builder.filter_dynamic(LowerCaser);
+                }
+                Ok(builder.build())
+            }
         }
     }
 
@@ -242,6 +268,7 @@ impl<'a> TokenizerWrapper<'a> {
             Tokenizer::Whitespace { .. } => "whitespace",
             Tokenizer::Ngram { .. } => "ngram",
             Tokenizer::Chinese { .. } => "chinese",
+            Tokenizer::Icu { .. } => "icu"
         }
     }
 
