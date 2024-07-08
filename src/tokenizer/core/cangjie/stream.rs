@@ -1,4 +1,4 @@
-use tantivy::tokenizer::Token;
+use tantivy::tokenizer::{RegexTokenizer, TextAnalyzer, Token};
 
 #[derive(Debug)]
 pub struct CangjieTokenStream<'a> {
@@ -42,11 +42,11 @@ impl<'a> ::tantivy::tokenizer::TokenStream for CangjieTokenStream<'a> {
         }
     }
 
-    fn token(&self) -> &::tantivy::tokenizer::Token {
+    fn token(&self) -> &Token {
         &self.token
     }
 
-    fn token_mut(&mut self) -> &mut ::tantivy::tokenizer::Token {
+    fn token_mut(&mut self) -> &mut Token {
         &mut self.token
     }
 }

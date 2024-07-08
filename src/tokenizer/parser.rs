@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use jieba_rs::Jieba;
 use tantivy::tokenizer::{LowerCaser, NgramTokenizer, RawTokenizer, RemoveLongFilter, SimpleTokenizer, Stemmer, StopWordFilter, TextAnalyzer, WhitespaceTokenizer};
 use crate::common::errors::TantivySearchTokenizerError;
-use crate::tokenizer::core::cangjie::{CangJieTokenizer, TokenizerOption};
-use crate::tokenizer::core::multilang::{IcuOption, IcuTokenizer};
+use crate::tokenizer::core::cangjie::{CangjieTokenizer, CangjieOption};
+use crate::tokenizer::core::icu::{IcuOption, IcuTokenizer};
 use crate::tokenizer::ingredient::{Config, Tokenizer};
 use crate::tokenizer::languages::{SupportFilterLanguage, SupportLanguageAlgorithm};
 
@@ -215,15 +215,15 @@ impl<'a> TokenizerWrapper<'a> {
                     _ => Jieba::empty(),
                 };
 
-                let tokenizer_option: TokenizerOption = match mode.as_str() {
-                    "all" => TokenizerOption::All,
-                    "unicode" => TokenizerOption::Unicode,
-                    "default" => TokenizerOption::Default { hmm: *hmm },
-                    "search" => TokenizerOption::ForSearch { hmm: *hmm },
-                    _ => TokenizerOption::Unicode, // default option
+                let tokenizer_option: CangjieOption = match mode.as_str() {
+                    "all" => CangjieOption::All,
+                    "unicode" => CangjieOption::Unicode,
+                    "default" => CangjieOption::Default { hmm: *hmm },
+                    "search" => CangjieOption::ForSearch { hmm: *hmm },
+                    _ => CangjieOption::Unicode, // default option
                 };
 
-                let mut builder = TextAnalyzer::builder(CangJieTokenizer {
+                let mut builder = TextAnalyzer::builder(CangjieTokenizer {
                     worker: Arc::new(jieba_mode),
                     option: tokenizer_option,
                 }).dynamic();

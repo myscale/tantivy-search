@@ -2,4 +2,4 @@ mod options;
 mod stream;
 mod tokenizer;
 
-pub use {options::TokenizerOption, stream::CangjieTokenStream, tokenizer::CangJieTokenizer};
+pub use {options::CangjieOption, stream::CangjieTokenStream, tokenizer::CangjieTokenizer};

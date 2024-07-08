@@ -1,6 +1,6 @@
 /// Tokenizer Option
 #[derive(Debug, Clone)]
-pub enum TokenizerOption {
+pub enum CangjieOption {
     /// Cut the input text, return all possible words
     All,
     /// Cut the input text
