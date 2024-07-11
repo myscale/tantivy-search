@@ -76,7 +76,7 @@ impl ConvertUtils {
     }
 
     pub fn row_ids_to_u8_bitmap(row_ids: &[u32]) -> Vec<u8> {
-        // O(n) try get max row_id, we use it to caculate bitmap(u8 vec) size
+        // O(n) try get max row_id, we use it to calculate bitmap(u8 vec) size
         let max_row_id = match row_ids.iter().max() {
             Some(&max) => max,
             None => return Vec::new(),
@@ -221,7 +221,7 @@ mod tests {
             row_ids_a.extend(vec![0; 1000]);
             assert_eq!(ConvertUtils::row_ids_to_u8_bitmap(&row_ids_a), [1]);
 
-            // rowids can convert to full bitmap
+            // row ids can convert to full bitmap
             let row_ids_b: Vec<u32> = vec![0, 1, 2, 3, 4, 5, 6, 7];
             assert_eq!(ConvertUtils::row_ids_to_u8_bitmap(&row_ids_b), [255]);
 
@@ -243,7 +243,7 @@ mod tests {
                 [34, 65, 128]
             );
 
-            // 8 rowids.
+            // 8 row ids.
             let row_ids_g: Vec<u32> = vec![0, 9, 18, 27, 36, 45, 54, 63];
             assert_eq!(
                 ConvertUtils::row_ids_to_u8_bitmap(&row_ids_g),
@@ -261,7 +261,7 @@ mod tests {
         fn test_massive_u8_bitmap_convert() {
             let start_1 = Instant::now();
             let mut row_ids_u8: Vec<u8> = vec![];
-            for i in 0..200000000 / 8 {
+            for _ in 0..200000000 / 8 {
                 row_ids_u8.push(255)
             }
             println!(
@@ -298,7 +298,7 @@ mod tests {
 
         #[test]
         fn test_is_row_id_exist() {
-            // 测试用例 1
+            // case 1
             let bitmap1: Vec<u8> = vec![255, 255];
             assert_eq!(ConvertUtils::is_row_id_exist(0, &bitmap1), true);
             assert_eq!(ConvertUtils::is_row_id_exist(7, &bitmap1), true);
@@ -306,7 +306,7 @@ mod tests {
             assert_eq!(ConvertUtils::is_row_id_exist(15, &bitmap1), true);
             assert_eq!(ConvertUtils::is_row_id_exist(16, &bitmap1), false);
 
-            // 测试用例 2
+            // case 2
             let bitmap2: Vec<u8> = vec![12, 16];
             assert_eq!(ConvertUtils::is_row_id_exist(0, &bitmap2), false);
             assert_eq!(ConvertUtils::is_row_id_exist(2, &bitmap2), true);
@@ -315,7 +315,7 @@ mod tests {
             assert_eq!(ConvertUtils::is_row_id_exist(12, &bitmap2), true);
             assert_eq!(ConvertUtils::is_row_id_exist(13, &bitmap2), false);
 
-            // 测试用例 3
+            // case 3
             let bitmap3: Vec<u8> = vec![1, 0, 2, 4];
             assert_eq!(ConvertUtils::is_row_id_exist(0, &bitmap3), true);
             assert_eq!(ConvertUtils::is_row_id_exist(1, &bitmap3), false);
@@ -326,7 +326,7 @@ mod tests {
             assert_eq!(ConvertUtils::is_row_id_exist(26, &bitmap3), true);
             assert_eq!(ConvertUtils::is_row_id_exist(27, &bitmap3), false);
 
-            // 测试用例 4: 空的 bitmap
+            // case 4: empty bitmap
             let bitmap4: Vec<u8> = vec![];
             assert_eq!(ConvertUtils::is_row_id_exist(0, &bitmap4), false);
             assert_eq!(ConvertUtils::is_row_id_exist(1, &bitmap4), false);

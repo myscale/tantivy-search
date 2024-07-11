@@ -1,7 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
 
     use roaring::RoaringBitmap;
@@ -85,7 +83,7 @@ mod tests {
         let (text_field, _, text_query, index_searcher) =
             extract_from_index_reader(index_reader.clone());
 
-        let mut top_docs_collector = TopDocsWithFilter::with_limit(10)
+        let top_docs_collector = TopDocsWithFilter::with_limit(10)
             .with_searcher(index_searcher.clone())
             .with_text_fields(vec![text_field])
             .with_stored_text(false);
@@ -101,7 +99,7 @@ mod tests {
 
         // Use alive bitmap
         // top_docs_collector = top_docs_collector.with_alive(Arc::new(alive_bitmap));
-        let searched_results = index_searcher
+        let _ = index_searcher
             .search(&text_query, &top_docs_collector)
             .expect("Can't execute search.");
         // assert_eq!(searched_results.len(), 1);

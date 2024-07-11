@@ -1,4 +1,4 @@
-use tantivy::tokenizer::{RegexTokenizer, TextAnalyzer, Token};
+use tantivy::tokenizer::Token;
 
 #[derive(Debug)]
 pub struct CangjieTokenStream<'a> {

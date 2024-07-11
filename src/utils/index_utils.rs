@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::Debug;
 use std::fs;
@@ -5,11 +6,13 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 use serde::{Deserialize, Serialize};
+use tantivy::Index;
 use crate::common::errors::{IndexUtilsError};
 use crate::tokenizer::ingredient::Config;
 use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::{common::constants::LOG_CALLBACK, DEBUG, WARNING};
 use crate::common::constants::INDEX_INFO_FILE_NAME;
+use crate::tokenizer::parser::{TokenizerConfig, TokenizerUtils};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct IndexParameterInDisk {
@@ -137,6 +140,32 @@ impl IndexUtils {
                 IndexUtilsError::WriteFileError(Self::format_path_error(file_path.as_path(), e))
             })
     }
+
+    pub fn register_tokenizers_from_config_map(
+        index: &Index,
+        config_map: &HashMap<String, TokenizerConfig>
+    ) {
+        let combine = |left:&str, right:&str| {format!("{}_{}", left, right)};
+        for (col_name, config) in config_map.iter() {
+            let tokenizer_name = combine(col_name, config.tokenizer_name.as_str());
+            index.tokenizers().register(tokenizer_name.as_str(), config.text_analyzer.clone());
+        }
+    }
+
+    pub fn register_tokenizers_from_disk(
+        path: &Path,
+        index: &Index
+    ) -> Result<(), IndexUtilsError> {
+        let raw_config: Config = Self::load_tokenizer_config(path)?;
+
+        let config_map: HashMap<String, TokenizerConfig> =
+            TokenizerUtils::parser_from_tokenizer_config(raw_config)?;
+        Self::register_tokenizers_from_config_map(index, &config_map);
+
+        Ok(())
+    }
+
+
 }
 
 

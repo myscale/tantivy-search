@@ -1,10 +1,9 @@
 use super::*;
 use super::super::TokenUtils;
 use log::{trace};
-use std::sync::Arc;
-use once_cell::sync::Lazy;
 use icu::segmenter::{GraphemeClusterSegmenter, LineSegmenter, SentenceSegmenter, WordSegmenter};
 
+#[allow(unused)]
 enum SegmentWorker {
     Grapheme(),
     Line,

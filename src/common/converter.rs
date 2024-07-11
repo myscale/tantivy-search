@@ -1,5 +1,4 @@
 use std::str::Utf8Error;
-
 use cxx::{vector::VectorElement, CxxString, CxxVector};
 
 use super::errors::CxxConvertError;

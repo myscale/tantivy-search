@@ -1,15 +1,15 @@
-use crate::common::constants::LOG_CALLBACK;
 use crate::common::errors::IndexSearcherError;
-use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::search::collector::row_id_bitmap_collector::RowIdRoaringCollector;
 use crate::search::implements::strategy::query_strategy::QueryStrategy;
-use crate::ERROR;
+use crate::{common::constants::LOG_CALLBACK, ERROR};
+use crate::logger::logger_bridge::TantivySearchLogger;
 use roaring::RoaringBitmap;
 use std::sync::Arc;
 use tantivy::query::{TermQuery, TermSetQuery};
-use tantivy::schema::{Field, FieldType, IndexRecordOption, Schema, TextFieldIndexing};
+use tantivy::schema::{FieldType, IndexRecordOption, Schema, TextFieldIndexing};
 use tantivy::tokenizer::{BoxTokenStream, TextAnalyzer};
 use tantivy::{Searcher, Term};
+use crate::search::implements::strategy::utils::StrategyUtils;
 
 /// Execute query for one term.
 ///
@@ -24,18 +24,14 @@ pub struct SingleTermQueryStrategy<'a> {
 
 impl<'a> QueryStrategy<Arc<RoaringBitmap>> for SingleTermQueryStrategy<'a> {
     fn execute(&self, searcher: &Searcher) -> Result<Arc<RoaringBitmap>, IndexSearcherError> {
+        static FUNC_NAME: &str = "SingleTermQueryStrategy";
+
         let schema: Schema = searcher.index().schema();
-
-        let col_field: Field = schema.get_field(self.column_name).map_err(|e| {
-            let error: IndexSearcherError = IndexSearcherError::TantivyError(e);
-            ERROR!(function:"SingleTermQueryStrategy", "{}", error);
-            error
-        })?;
-
-        let field_type: &FieldType = schema.get_field_entry(col_field).field_type();
+        let field = StrategyUtils::get_field_with_column(&schema, self.column_name)?;
+        let field_type: &FieldType = schema.get_field_entry(field).field_type();
         if !field_type.is_indexed() {
             let error_msg: String = format!("column field:{} not indexed.", self.column_name);
-            ERROR!(function:"SingleTermQueryStrategy", "{}", error_msg);
+            ERROR!(function: FUNC_NAME, "{}", error_msg);
             return Err(IndexSearcherError::InternalError(error_msg));
         }
 
@@ -46,7 +42,7 @@ impl<'a> QueryStrategy<Arc<RoaringBitmap>> for SingleTermQueryStrategy<'a> {
                         "column field:{} not indexed, but this error msg shouldn't display",
                         self.column_name
                     );
-                    ERROR!(function:"SingleTermQueryStrategy", "{}", error_msg);
+                    ERROR!(function: FUNC_NAME, "{}", error_msg);
                     IndexSearcherError::InternalError(error_msg)
                 })?;
             let mut terms: Vec<Term> = Vec::new();
@@ -57,7 +53,7 @@ impl<'a> QueryStrategy<Arc<RoaringBitmap>> for SingleTermQueryStrategy<'a> {
                 .unwrap();
             let mut token_stream: BoxTokenStream<'_> = text_analyzer.token_stream(self.term);
             token_stream.process(&mut |token| {
-                let term: Term = Term::from_field_text(col_field, &token.text);
+                let term: Term = Term::from_field_text(field, &token.text);
                 terms.push(term);
             });
 
@@ -68,20 +64,20 @@ impl<'a> QueryStrategy<Arc<RoaringBitmap>> for SingleTermQueryStrategy<'a> {
             searcher
                 .search(&ter_set_query, &row_id_collector)
                 .map_err(|e| {
-                    ERROR!(function:"SingleTermQueryStrategy", "{}", e);
+                    ERROR!(function: FUNC_NAME, "{}", e);
                     IndexSearcherError::TantivyError(e)
                 })
         } else {
-            // Not Expected.
-            let term: Term = Term::from_field_text(col_field, self.term);
+            // FixMe: Not Expected.
+            let term: Term = Term::from_field_text(field, self.term);
             let term_query: TermQuery = TermQuery::new(term, IndexRecordOption::WithFreqs);
             let row_id_collector: RowIdRoaringCollector =
                 RowIdRoaringCollector::with_field("row_id".to_string());
-            println!("for not str");
+
             searcher
                 .search(&term_query, &row_id_collector)
                 .map_err(|e| {
-                    ERROR!(function:"SingleTermQueryStrategy", "{}", e);
+                    ERROR!(function: FUNC_NAME, "{}", e);
                     IndexSearcherError::TantivyError(e)
                 })
         }

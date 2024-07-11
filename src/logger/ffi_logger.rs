@@ -104,6 +104,7 @@ mod tests {
 
     use super::*;
     use std::ffi::CString;
+    use crate::common::TEST_MUTEX;
 
     // Convert a Rust string to a C-style string.
     fn to_c_str(s: &str) -> *const c_char {

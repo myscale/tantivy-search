@@ -75,7 +75,7 @@ impl TantivySearchLogger {
 
 #[cfg(test)]
 mod tests {
-    use crate::{LOG4RS_HANDLE, TEST_MUTEX};
+    use crate::{LOG4RS_HANDLE};
 
     use super::*;
     use libc::*;
@@ -86,6 +86,7 @@ mod tests {
         encode::pattern::PatternEncoder,
     };
     use once_cell::sync::OnceCell;
+    use crate::common::TEST_MUTEX;
 
     extern "C" fn log_callback_for_test(level: i32, _info: *const c_char, _message: *const c_char) {
         assert_eq!(level, 1);

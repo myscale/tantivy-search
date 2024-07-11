@@ -1,4 +1,3 @@
-use std::result;
 use super::*;
 use jieba_rs::Jieba;
 use log::{trace};

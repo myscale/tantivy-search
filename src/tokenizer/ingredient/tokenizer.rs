@@ -95,6 +95,10 @@ pub enum Tokenizer {
             deserialize_with = "icu_mode_validator"
         )]
         mode: String,
+        #[serde(default, deserialize_with = "stop_word_filters_validator")]
+        stop_word_filters: Vec<String>,
+        #[serde(default, deserialize_with = "stem_languages_filters_validator")]
+        stem_languages: Vec<String>,
         #[serde(default)]
         store_doc: bool,
         #[serde(default)]
@@ -643,7 +647,7 @@ mod tests {
             Tokenizer::Icu {
                 mode,
                 store_doc,
-                case_sensitive,
+                case_sensitive, ..
             } => {
                 assert_eq!(mode, "word");
                 assert!(!store_doc);

@@ -1,8 +1,4 @@
-//! Definition of Tantivy's errors and results.
-
 use std::{num::TryFromIntError, str::Utf8Error};
-
-// use serde_json::error;
 use tantivy::TantivyError;
 use thiserror::Error;
 
@@ -41,6 +37,12 @@ pub enum IndexUtilsError {
     ReadFileError(String),
     #[error("Failed to write file. '{0}'")]
     WriteFileError(String),
+
+    #[error(transparent)]
+    TokenizerUtilsError(#[from] TokenizerUtilsError),
+
+    #[error(transparent)]
+    TantivySearchTokenizerError(#[from] TantivySearchTokenizerError),
 }
 
 #[derive(Debug, Clone, Error)]
@@ -65,6 +67,7 @@ pub enum TantivySearchTokenizerError {
 
     #[error("Failed to build TextAnalyzer, TantivyError happened: '{0}'")]
     TantivyError(#[from] TantivyError),
+
 }
 
 #[derive(Debug, Clone, Error)]
@@ -128,7 +131,7 @@ pub enum TantivySearchError {
     IndexNotExists(String),
 
     /// An internal error occurred. This is are internal states that should not be reached.
-    /// e.g. a datastructure is incorrectly inititalized.
+    /// e.g. a data structure is incorrectly initialized.
     #[error("Internal error: '{0}'")]
     InternalError(String),
 
