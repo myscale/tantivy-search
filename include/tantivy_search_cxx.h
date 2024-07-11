@@ -764,7 +764,7 @@ struct Statistics final {
 };
 #endif // CXXBRIDGE1_STRUCT_Statistics
 
-bool ffi_varify_index_parameter(::std::string const &index_json_parameter) noexcept;
+bool ffi_verify_index_parameter(::std::string const &index_json_parameter) noexcept;
 
 // Create tantivy index.
 // arguments:
@@ -774,7 +774,7 @@ bool ffi_varify_index_parameter(::std::string const &index_json_parameter) noexc
 bool ffi_create_index_with_parameter(::std::string const &index_path, ::std::vector<::std::string> const &column_names, ::std::string const &index_json_parameter) noexcept;
 
 // Create tantivy index by default.
-// argements:
+// arguments:
 // - `index_path`: index directory.
 // - `column_names`: which columns will be used to build index.
 bool ffi_create_index(::std::string const &index_path, ::std::vector<::std::string> const &column_names) noexcept;
@@ -818,42 +818,6 @@ bool ffi_free_index_reader(::std::string const &index_path) noexcept;
 // - `index_path`: index directory.
 ::std::uint64_t ffi_get_indexed_doc_counts(::std::string const &index_path) noexcept;
 
-// Execute single term query with given rowId range.
-// arguments:
-// - `index_path`: index directory.
-// - `column_name`: which column will execute search.
-// - `term`: term needs to be searched.
-// - `lrange`: rowId left begin.
-// - `rrange`: rowId right end.
-bool ffi_query_term_with_range(::std::string const &index_path, ::std::string const &column_name, ::std::string const &term, ::std::uint64_t lrange, ::std::uint64_t rrange) noexcept;
-
-// Execute a group of terms query with given rowId range.
-// arguments:
-// - `index_path`: index directory.
-// - `column_name`: which column will execute search.
-// - `terms`: a group of terms need to be searched.
-// - `lrange`: rowId left begin.
-// - `rrange`: rowId right end.
-bool ffi_query_terms_with_range(::std::string const &index_path, ::std::string const &column_name, ::std::vector<::std::string> const &terms, ::std::uint64_t lrange, ::std::uint64_t rrange) noexcept;
-
-// Execute a sentence query with given rowId range.
-// arguments:
-// - `index_path`: index directory.
-// - `column_name`: which column will execute search.
-// - `sentence`: sentence needs to be searched.
-// - `lrange`: rowId left begin.
-// - `rrange`: rowId right end.
-bool ffi_query_sentence_with_range(::std::string const &index_path, ::std::string const &column_name, ::std::string const &sentence, ::std::uint64_t lrange, ::std::uint64_t rrange) noexcept;
-
-// Execute a regex query with given rowId range.
-// arguments:
-// - `index_path`: index directory.
-// - `column_name`: which column will execute search.
-// - `pattern`: pattern should be given by ClickHouse.
-// - `lrange`: rowId left begin.
-// - `rrange`: rowId right end.
-bool ffi_regex_term_with_range(::std::string const &index_path, ::std::string const &column_name, ::std::string const &pattern, ::std::uint64_t lrange, ::std::uint64_t rrange) noexcept;
-
 // Execute a term query and return rowIds u8 bitmap.
 // arguments:
 // - `index_path`: index directory.
@@ -890,7 +854,7 @@ bool ffi_regex_term_with_range(::std::string const &index_path, ::std::string co
 // - `u8_aived_bitmap`: alived rowIds given by u8 bitmap.
 // - `query_with_filter`: whether use alived_bitmap or not.
 // - `statistics`: for multi parts bm25 statistics info.
-::rust::Vec<::RowIdWithScore> ffi_bm25_search(::std::string const &index_path, ::std::string const &sentence, ::std::uint32_t topk, ::std::vector<::std::uint8_t> const &u8_aived_bitmap, bool query_with_filter, bool enable_nlq, bool operator_or, ::Statistics const &statistics) noexcept;
+::rust::Vec<::RowIdWithScore> ffi_bm25_search(::std::string const &index_path, ::std::string const &sentence, ::std::uint32_t top_k, ::std::vector<::std::uint8_t> const &u8_alive_bitmap, bool query_with_filter, bool enable_nlq, bool operator_or, ::Statistics const &statistics) noexcept;
 
 // Get doc freq for current part.
 // arguments:
