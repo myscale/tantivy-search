@@ -1,8 +1,4 @@
-//! Definition of Tantivy's errors and results.
-
 use std::{num::TryFromIntError, str::Utf8Error};
-
-// use serde_json::error;
 use tantivy::TantivyError;
 use thiserror::Error;
 
@@ -41,6 +37,37 @@ pub enum IndexUtilsError {
     ReadFileError(String),
     #[error("Failed to write file. '{0}'")]
     WriteFileError(String),
+
+    #[error(transparent)]
+    TokenizerUtilsError(#[from] TokenizerUtilsError),
+
+    #[error(transparent)]
+    TantivySearchTokenizerError(#[from] TantivySearchTokenizerError),
+}
+
+#[derive(Debug, Clone, Error)]
+#[allow(dead_code)]
+pub enum TantivySearchTokenizerError {
+    #[error("Failed to deserialize index parameter. '{0}'")]
+    JsonDeserializeError(String),
+    #[error("Failed to serialize index parameter. '{0}'")]
+    JsonSerializeError(String),
+    #[error("Failed to read index parameter from file. '{0}'")]
+    ReadFileError(String),
+
+    #[error("Failed to remove directory. '{0}'")]
+    RemoveDirectoryError(String),
+    #[error("Error happened when create directory. '{0}'")]
+    CreateDirectoryError(String),
+    #[error("Error happened when write file. '{0}'")]
+    WriteFileError(String),
+
+    #[error("Failed to build TextAnalyzer. '{0}'")]
+    BuildTokenizerError(String),
+
+    #[error("Failed to build TextAnalyzer, TantivyError happened: '{0}'")]
+    TantivyError(#[from] TantivyError),
+
 }
 
 #[derive(Debug, Clone, Error)]
@@ -92,6 +119,9 @@ pub enum TantivySearchError {
     TokenizerUtilsError(#[from] TokenizerUtilsError),
 
     #[error(transparent)]
+    TantivySearchTokenizerError(#[from] TantivySearchTokenizerError),
+
+    #[error(transparent)]
     IndexSearcherError(#[from] IndexSearcherError),
 
     #[error(transparent)]
@@ -101,7 +131,7 @@ pub enum TantivySearchError {
     IndexNotExists(String),
 
     /// An internal error occurred. This is are internal states that should not be reached.
-    /// e.g. a datastructure is incorrectly inititalized.
+    /// e.g. a data structure is incorrectly initialized.
     #[error("Internal error: '{0}'")]
     InternalError(String),
 

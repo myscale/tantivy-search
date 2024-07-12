@@ -53,7 +53,7 @@ pub mod ffi {
     }
 
     extern "Rust" {
-        pub fn ffi_varify_index_parameter(index_json_parameter: &CxxString) -> bool;
+        pub fn ffi_verify_index_parameter(index_json_parameter: &CxxString) -> bool;
 
         /// Create tantivy index.
         /// arguments:
@@ -67,7 +67,7 @@ pub mod ffi {
         ) -> bool;
 
         /// Create tantivy index by default.
-        /// argements:
+        /// arguments:
         /// - `index_path`: index directory.
         /// - `column_names`: which columns will be used to build index.
         fn ffi_create_index(index_path: &CxxString, column_names: &CxxVector<CxxString>) -> bool;
@@ -115,66 +115,6 @@ pub mod ffi {
         /// arguments:
         /// - `index_path`: index directory.
         fn ffi_get_indexed_doc_counts(index_path: &CxxString) -> u64;
-
-        /// Execute single term query with given rowId range.
-        /// arguments:
-        /// - `index_path`: index directory.
-        /// - `column_name`: which column will execute search.
-        /// - `term`: term needs to be searched.
-        /// - `lrange`: rowId left begin.
-        /// - `rrange`: rowId right end.
-        fn ffi_query_term_with_range(
-            index_path: &CxxString,
-            column_name: &CxxString,
-            term: &CxxString,
-            lrange: u64,
-            rrange: u64,
-        ) -> bool;
-
-        /// Execute a group of terms query with given rowId range.
-        /// arguments:
-        /// - `index_path`: index directory.
-        /// - `column_name`: which column will execute search.
-        /// - `terms`: a group of terms need to be searched.
-        /// - `lrange`: rowId left begin.
-        /// - `rrange`: rowId right end.
-        fn ffi_query_terms_with_range(
-            index_path: &CxxString,
-            column_name: &CxxString,
-            terms: &CxxVector<CxxString>,
-            lrange: u64,
-            rrange: u64,
-        ) -> bool;
-
-        /// Execute a sentence query with given rowId range.
-        /// arguments:
-        /// - `index_path`: index directory.
-        /// - `column_name`: which column will execute search.
-        /// - `sentence`: sentence needs to be searched.
-        /// - `lrange`: rowId left begin.
-        /// - `rrange`: rowId right end.
-        fn ffi_query_sentence_with_range(
-            index_path: &CxxString,
-            column_name: &CxxString,
-            sentence: &CxxString,
-            lrange: u64,
-            rrange: u64,
-        ) -> bool;
-
-        /// Execute a regex query with given rowId range.
-        /// arguments:
-        /// - `index_path`: index directory.
-        /// - `column_name`: which column will execute search.
-        /// - `pattern`: pattern should be given by ClickHouse.
-        /// - `lrange`: rowId left begin.
-        /// - `rrange`: rowId right end.
-        fn ffi_regex_term_with_range(
-            index_path: &CxxString,
-            column_name: &CxxString,
-            pattern: &CxxString,
-            lrange: u64,
-            rrange: u64,
-        ) -> bool;
 
         /// Execute a term query and return rowIds u8 bitmap.
         /// arguments:
@@ -231,14 +171,13 @@ pub mod ffi {
         pub fn ffi_bm25_search(
             index_path: &CxxString,
             sentence: &CxxString,
-            topk: u32,
-            u8_aived_bitmap: &CxxVector<u8>,
+            top_k: u32,
+            u8_alive_bitmap: &CxxVector<u8>,
             query_with_filter: bool,
             enable_nlq: bool,
             operator_or: bool,
             statistics: &Statistics,
         ) -> Vec<RowIdWithScore>;
-
 
         /// Get doc freq for current part.
         /// arguments:
@@ -307,11 +246,19 @@ impl DocWithFreq {
 
 #[allow(dead_code)]
 impl Statistics {
+    // fn new(docs_freq: Vec<DocWithFreq>, total_num_tokens: Vec<FieldTokenNums>, total_num_docs: u64) -> Self {
     fn new(docs_freq: Vec<DocWithFreq>, total_num_tokens: u64, total_num_docs: u64) -> Self {
         Statistics {
             docs_freq,
             total_num_tokens,
             total_num_docs,
+        }
+    }
+    fn default() -> Self {
+        Statistics {
+            docs_freq: vec![],
+            total_num_tokens: 0,
+            total_num_docs: 0
         }
     }
 }

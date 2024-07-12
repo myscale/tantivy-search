@@ -195,7 +195,8 @@ mod tests {
     use log::LevelFilter;
 
     use crate::logger::logger_bridge::TantivySearchLogger;
-    use crate::{empty_log_callback, update_logger_for_test, LOG_CALLBACK, TEST_MUTEX};
+    use crate::{empty_log_callback, update_logger_for_test, LOG_CALLBACK};
+    use crate::common::TEST_MUTEX;
 
     fn prepare_callback() {
         let _ = LOG_CALLBACK.get_or_init(|| empty_log_callback);

@@ -16,7 +16,6 @@ use once_cell::sync::Lazy;
 use once_cell::sync::OnceCell;
 use roaring::RoaringBitmap;
 use std::sync::Arc;
-use std::sync::Mutex;
 
 use super::converter::Converter;
 use super::converter::CxxElementStrategy;
@@ -54,11 +53,11 @@ pub static FFI_INDEX_SEARCHER_CACHE: Lazy<IndexReaderBridgeCache> =
     Lazy::new(|| IndexReaderBridgeCache::new());
 
 /// Convert 'CxxString' to 'String'
-pub static CXX_STRING_CONERTER: Lazy<Converter<CxxString, String, CxxElementStrategy>> =
+pub static CXX_STRING_CONVERTER: Lazy<Converter<CxxString, String, CxxElementStrategy>> =
     Lazy::new(|| Converter::new(CxxElementStrategy));
 
 /// Convert 'CxxVector<CxxString>' to 'Vec<String>'
-pub static CXX_VECTOR_STRING_CONERTER: Lazy<
+pub static CXX_VECTOR_STRING_CONVERTER: Lazy<
     Converter<CxxVector<CxxString>, Vec<String>, CxxVectorStringStrategy>,
 > = Lazy::new(|| Converter::new(CxxVectorStringStrategy));
 
@@ -73,8 +72,7 @@ where
 // language filters
 // pub static stop_word_filters: Vec<String> = ["".to_string()].to_vec();
 // Avoid some unit test run concurrently.
-#[allow(dead_code)]
-pub static TEST_MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
 
 // pub static LOAD_INDEX_MUTEX: Mutex<()> = Mutex::new(());
 

@@ -3,7 +3,6 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 use tantivy::tokenizer::Language;
 
-/// Available languages for stop words.
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
 pub enum SupportFilterLanguage {
     Danish,
@@ -66,7 +65,6 @@ impl SupportFilterLanguage {
     }
 }
 
-/// Available languages for stem algorithm.
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
 pub enum SupportLanguageAlgorithm {
     Arabic,
