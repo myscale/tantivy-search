@@ -254,6 +254,13 @@ impl Statistics {
             total_num_docs,
         }
     }
+    fn default() -> Self {
+        Statistics {
+            docs_freq: vec![],
+            total_num_tokens: 0,
+            total_num_docs: 0
+        }
+    }
 }
 #[allow(dead_code)]
 impl FieldTokenNums {

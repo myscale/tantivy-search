@@ -87,3 +87,30 @@ pub fn load_index_reader(index_path: &str) -> Result<bool, TantivySearchError> {
 
     Ok(true)
 }
+
+#[cfg(test)]
+mod tests {
+    use tempfile::TempDir;
+    use crate::common::{SinglePartTest, TEST_MUTEX};
+    use crate::common::constants::FFI_INDEX_SEARCHER_CACHE;
+    use crate::search::implements::api_common::load_index_reader;
+
+    #[test]
+    fn normal_test() {
+        let _guard = TEST_MUTEX.lock().unwrap();
+        let tmp_dir = TempDir::new().unwrap();
+        let tmp_dir = tmp_dir.path().to_str().unwrap();
+
+        let _ = SinglePartTest::index_docs_and_get_reader_bridge(tmp_dir, true, true, true);
+
+        let res = FFI_INDEX_SEARCHER_CACHE.get_index_reader_bridge(tmp_dir.to_string());
+        assert!(res.is_err());
+
+        assert!(load_index_reader(tmp_dir).unwrap());
+
+        let res = FFI_INDEX_SEARCHER_CACHE.get_index_reader_bridge(tmp_dir.to_string());
+        assert!(res.is_ok());
+
+        assert!(load_index_reader(tmp_dir).unwrap());
+    }
+}

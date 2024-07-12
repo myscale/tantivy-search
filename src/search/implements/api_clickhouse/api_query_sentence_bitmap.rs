@@ -41,5 +41,9 @@ mod tests {
         let res = query_sentence_bitmap(tmp_dir, "col1", "Ancient").unwrap();
         assert_eq!(res.len(), 1);
         assert_eq!(res[0], 17);
+
+        let res = query_sentence_bitmap(tmp_dir, "col2", "nature moral").unwrap();
+        assert_eq!(res.len(), 1);
+        assert_eq!(res[0], 18);
     }
 }

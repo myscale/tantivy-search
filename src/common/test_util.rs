@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use once_cell::sync::Lazy;
 use tantivy::{collector::Count, Document, Index, merge_policy::LogMergePolicy, Opstamp, query::QueryParser, ReloadPolicy, schema::{FAST, INDEXED, Schema, TEXT}};
-use tantivy::schema::Field;
+use tantivy::schema::{Field, STORED};
 
 use crate::{FFI_INDEX_WRITER_CACHE, index::bridge::index_writer_bridge::IndexWriterBridge};
 use crate::common::constants::FFI_INDEX_SEARCHER_CACHE;
@@ -60,7 +60,7 @@ impl SinglePartTest {
         schema_builder.add_u64_field("row_id", FAST | INDEXED);
         let col_name = |idx: usize| { format!("col{}", idx + 1) };
         for col_idx in 0..columns_number {
-            schema_builder.add_text_field(col_name(col_idx).as_str(), TEXT);
+            schema_builder.add_text_field(col_name(col_idx).as_str(), TEXT|STORED);
         }
         let schema = schema_builder.build();
         return schema;

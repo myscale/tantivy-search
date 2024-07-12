@@ -47,3 +47,38 @@ pub fn regex_term_bitmap(
     Ok(ConvertUtils::row_ids_to_u8_bitmap(&row_ids))
 
 }
+
+
+#[cfg(test)]
+mod tests {
+    use tempfile::TempDir;
+    use crate::common::{SinglePartTest, TEST_MUTEX};
+    use crate::search::implements::api_common::load_index_reader;
+    use crate::search::implements::regex_term_bitmap;
+
+    #[test]
+    fn normal_test() {
+        let _guard = TEST_MUTEX.lock().unwrap();
+        let tmp_dir = TempDir::new().unwrap();
+        let tmp_dir = tmp_dir.path().to_str().unwrap();
+
+        let _ = SinglePartTest::index_docs_and_get_reader_bridge(tmp_dir, true, true, true);
+        assert!(load_index_reader(tmp_dir).unwrap());
+
+        let res = regex_term_bitmap(tmp_dir, "col1", "An%ent").unwrap();
+        assert_eq!(res.len(), 1);
+        assert_eq!(res[0], 17);
+
+        let res = regex_term_bitmap(tmp_dir, "col1", "an%ent").unwrap();
+        assert_eq!(res.len(), 1);
+        assert_eq!(res[0], 17);
+
+        let res = regex_term_bitmap(tmp_dir, "col1", "%ncient%empir%").unwrap();
+        assert_eq!(res.len(), 0);
+
+        // Economic
+        let res = regex_term_bitmap(tmp_dir, "col2", "E%no__c").unwrap();
+        assert_eq!(res.len(), 1);
+        assert_eq!(res[0], 4);
+    }
+}
