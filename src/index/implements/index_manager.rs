@@ -103,7 +103,7 @@ impl IndexManager {
         FFI_INDEX_WRITER_CACHE
             .get_index_writer_bridge(index_path.to_string())
             .map_err(|e| {
-                ERROR!(function: func_name, "{}", e);
+                INFO!(function: func_name, "{}", e);
                 TantivySearchError::InternalError(e)
             })
     }
