@@ -43,18 +43,13 @@ pub(super) fn bm25_inner_search(
             .or_insert(item.doc_freq);
     }
 
-    // TODO Currently MyScale Can only execute bm25 search in one column.
     let mut total_num_tokens_map: HashMap<Field, u64> = HashMap::new();
-    // for item in &statistics.total_num_tokens {
-    //     total_num_tokens_map
-    //         .entry(Field::from_field_id(item.field_id))
-    //         .and_modify(|count| *count += item.field_total_tokens)
-    //         .or_insert(item.field_total_tokens);
-    // }
-    let field = Field::from_field_id(statistics.docs_freq[0].field_id);
-    total_num_tokens_map
-        .entry(field)
-        .or_insert(statistics.total_num_tokens);
+    for item in &statistics.total_num_tokens {
+        total_num_tokens_map
+            .entry(Field::from_field_id(item.field_id))
+            .and_modify(|count| *count += item.field_total_tokens)
+            .or_insert(item.field_total_tokens);
+    }
 
     let multi_parts_statistics = MultiPartsStatistics {
         doc_freq_map,

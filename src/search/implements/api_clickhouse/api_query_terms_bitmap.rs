@@ -4,7 +4,7 @@ use crate::common::errors::TantivySearchError;
 use crate::search::implements::SearchUtils;
 use crate::search::implements::strategy::QueryExecutor;
 use crate::search::implements::strategy::TermSetQueryStrategy;
-use crate::search::utils::convert_utils::ConvertUtils;
+use crate::search::utils::ConvertUtils;
 
 pub fn query_terms_bitmap(
     index_path: &str,

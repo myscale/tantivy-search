@@ -6,7 +6,7 @@ use tantivy::query::Weight;
 use tantivy::schema::Field;
 use tantivy::{DocAddress, DocId, Score, Searcher, SegmentOrdinal, SegmentReader};
 
-use crate::search::utils::convert_utils::ConvertUtils;
+use crate::search::utils::ConvertUtils;
 use crate::RowIdWithScore;
 
 // Class Inheritance Diagram:

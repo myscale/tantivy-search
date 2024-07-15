@@ -8,7 +8,7 @@ use crate::{common::constants::LOG_CALLBACK, ERROR, INFO};
 use crate::logger::logger_bridge::TantivySearchLogger;
 
 use crate::common::constants::{FFI_INDEX_SEARCHER_CACHE, FFI_INDEX_WRITER_CACHE};
-use crate::index::bridge::index_writer_bridge::IndexWriterBridge;
+use crate::index::bridge::IndexWriterBridge;
 use crate::index::implements::api_free_index_writer::free_index_writer;
 use crate::search::implements::free_index_reader;
 use crate::tokenizer::parser::{TokenizerConfig, TokenizerUtils};
@@ -52,7 +52,7 @@ impl IndexManager {
             TokenizerUtils::parser_index_json_parameter(index_json_parameter)
                 .map_err(|e| {
                     ERROR!(function: func_name, "{}", e.to_string());
-                    TantivySearchError::TantivySearchTokenizerError(e)
+                    TantivySearchError::TokenizerError(e)
                 })?;
 
         for col_name in column_names {

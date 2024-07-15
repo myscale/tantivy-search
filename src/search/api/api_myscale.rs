@@ -1,5 +1,5 @@
 use crate::cxx_vector_converter;
-use crate::ffi::Statistics;
+use crate::ffi::{FieldTokenNums, Statistics};
 use crate::search::implements::{bm25_natural_language_search, bm25_standard_search, get_doc_freq,
                                 get_total_num_docs, get_total_num_tokens};
 use crate::{DocWithFreq, RowIdWithScore, CXX_STRING_CONVERTER};
@@ -119,22 +119,19 @@ pub fn ffi_get_total_num_docs(index_path: &CxxString) -> u64 {
     })
 }
 
-pub fn ffi_get_total_num_tokens(index_path: &CxxString) -> u64 {
-    // pub fn ffi_get_total_num_tokens(index_path: &CxxString) -> Vec<FieldTokenNums> {
+pub fn ffi_get_total_num_tokens(index_path: &CxxString) -> Vec<FieldTokenNums> {
     static FUNC_NAME: &str = "ffi_get_total_num_tokens";
 
     let index_path: String = match CXX_STRING_CONVERTER.convert(index_path) {
         Ok(path) => path,
         Err(e) => {
             ERROR!(function: FUNC_NAME, "Can't convert 'index_path', message: {}", e);
-            return 0u64;
-            // return vec![];
+            return vec![];
         }
     };
 
     get_total_num_tokens(&index_path).unwrap_or_else(|e| {
         ERROR!(function: FUNC_NAME, "Error performing get_total_num_tokens: {}", e);
-        0u64
-        // vec![]
+        vec![]
     })
 }

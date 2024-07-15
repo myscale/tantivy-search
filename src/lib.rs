@@ -11,10 +11,8 @@ mod search;
 mod tokenizer;
 mod utils;
 use common::constants::*;
-use index::api::api_index::*;
-use search::api::api_clickhouse::*;
-use search::api::api_common::*;
-use search::api::api_myscale::*;
+use index::api::*;
+use search::api::*;
 use utils::ffi_utils::*;
 // re-export log ffi function.
 pub use logger::ffi_logger::*;
@@ -47,8 +45,7 @@ pub mod ffi {
     #[derive(Debug, Clone)]
     pub struct Statistics {
         pub docs_freq: Vec<DocWithFreq>,
-        // pub total_num_tokens: Vec<FieldTokenNums>,
-        pub total_num_tokens: u64,
+        pub total_num_tokens: Vec<FieldTokenNums>,
         pub total_num_docs: u64,
     }
 
@@ -164,9 +161,9 @@ pub mod ffi {
         /// arguments:
         /// - `index_path`: index directory.
         /// - `sentence`: from ClickHouse TextSearch function.
-        /// - `topk`: only return top k related results.
-        /// - `u8_aived_bitmap`: alived rowIds given by u8 bitmap.
-        /// - `query_with_filter`: whether use alived_bitmap or not.
+        /// - `top_k`: only return top k related results.
+        /// - `u8_alive_bitmap`: alive row ids given by u8 bitmap.
+        /// - `query_with_filter`:use alive_bitmap or not.
         /// - `statistics`: for multi parts bm25 statistics info.
         pub fn ffi_bm25_search(
             index_path: &CxxString,
@@ -193,7 +190,7 @@ pub mod ffi {
         /// Get total num tokens for current part.
         /// arguments:
         /// - `index_path`: index directory.
-        pub fn ffi_get_total_num_tokens(index_path: &CxxString) -> u64;
+        pub fn ffi_get_total_num_tokens(index_path: &CxxString) -> Vec<FieldTokenNums>;
     }
 }
 
@@ -246,8 +243,7 @@ impl DocWithFreq {
 
 #[allow(dead_code)]
 impl Statistics {
-    // fn new(docs_freq: Vec<DocWithFreq>, total_num_tokens: Vec<FieldTokenNums>, total_num_docs: u64) -> Self {
-    fn new(docs_freq: Vec<DocWithFreq>, total_num_tokens: u64, total_num_docs: u64) -> Self {
+    fn new(docs_freq: Vec<DocWithFreq>, total_num_tokens: Vec<FieldTokenNums>, total_num_docs: u64) -> Self {
         Statistics {
             docs_freq,
             total_num_tokens,
@@ -257,7 +253,7 @@ impl Statistics {
     fn default() -> Self {
         Statistics {
             docs_freq: vec![],
-            total_num_tokens: 0,
+            total_num_tokens: vec![],
             total_num_docs: 0
         }
     }

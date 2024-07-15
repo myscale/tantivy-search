@@ -169,9 +169,6 @@ impl IndexUtils {
 }
 
 
-
-
-
 #[cfg(test)]
 mod test {
     use crate::utils::index_utils::IndexParameterInDisk;

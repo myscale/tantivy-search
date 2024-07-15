@@ -71,7 +71,7 @@ impl IndexWriterBridgeCache {
 mod tests {
     use tempfile::TempDir;
     use crate::common::SinglePartTest;
-    use crate::index::bridge::index_writer_bridge_cache::IndexWriterBridgeCache;
+    use crate::index::bridge::IndexWriterBridgeCache;
 
     #[test]
     fn normal_test_insert() {

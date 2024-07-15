@@ -1,2 +1,3 @@
-pub mod convert_utils;
-pub mod index_searcher_utils;
+mod convert_utils;
+
+pub use convert_utils::ConvertUtils;

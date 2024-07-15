@@ -29,34 +29,82 @@ pub fn bm25_natural_language_search(
 
 #[cfg(test)]
 mod tests {
-    use tempfile::TempDir;
-    use crate::common::{SinglePartTest, TEST_MUTEX};
-    use crate::ffi::Statistics;
-    use crate::search::implements::api_common::load_index_reader;
-    use crate::search::implements::{bm25_natural_language_search};
+    use crate::common::{MultiPartsTest, SinglePartTest};
 
     #[test]
-    fn normal_test_single_part() {
-        let _guard = TEST_MUTEX.lock().unwrap();
-        let tmp_dir = TempDir::new().unwrap();
-        let tmp_dir = tmp_dir.path().to_str().unwrap();
-
-        let _ = SinglePartTest::index_docs_and_get_reader_bridge(tmp_dir, true, true, true);
-        assert!(load_index_reader(tmp_dir).unwrap());
-
-        let res = bm25_natural_language_search(
-            tmp_dir,
-            "ancient OR (social military)",
-            10,
+    fn normal_test_single_part_operation_or() {
+        let res = SinglePartTest::single_part_test_helper(
+            true,
+            "col1:ancient OR col2:(moral horizons)",
             &vec![],
             false,
-            true,
-            &Statistics::default(),
             true
         );
-        assert!(res.is_ok());
-        for row in res.unwrap() {
-            println!("{:?}", row);
-        }
+
+        assert_eq!(res.len(), 2);
+        assert_eq!(res[0].row_id, 0);
+        assert_eq!(format!("{:.3}", res[0].score), format!("{:.3}", 2.2181613));
+        assert_eq!(res[1].row_id, 4);
+        assert_eq!(format!("{:.3}", res[1].score), format!("{:.3}", 2.181346));
+    }
+
+    #[test]
+    fn normal_test_single_part_operation_and() {
+        let res = SinglePartTest::single_part_test_helper(
+            true,
+            "col1:(ancient rise fall)",
+            &vec![],
+            false,
+            false
+        );
+        assert_eq!(res.len(), 1);
+        assert_eq!(res[0].row_id, 0);
+        assert_eq!(format!("{:.3}", res[0].score), format!("{:.3}", 3.3516014));
+    }
+
+    #[test]
+    fn normal_test_single_part_with_filter() {
+        let res = SinglePartTest::single_part_test_helper(
+            true,
+            "col1:(ancient rise fall)",
+            &vec![16],
+            true,
+            true
+        );
+
+        assert_eq!(res.len(), 1);
+        assert_eq!(res[0].row_id, 4);
+        assert_eq!(format!("{:.3}", res[0].score), format!("{:.3}", 0.8952658));
+    }
+
+    #[test]
+    fn normal_test_single_part_no_filter() {
+        let res = SinglePartTest::single_part_test_helper(
+            true,
+            "col1:(ancient rise fall)",
+            &vec![],
+            false,
+            true
+        );
+
+        assert_eq!(res.len(), 2);
+        assert_eq!(res[0].row_id, 0);
+        assert_eq!(format!("{:.3}", res[0].score), format!("{:.3}", 3.3516011));
+        assert_eq!(res[1].row_id, 4);
+        assert_eq!(format!("{:.3}", res[1].score), format!("{:.3}", 0.8952658));
+    }
+
+    #[test]
+    fn normal_test_multi_parts_no_filter() {
+        assert_eq!(MultiPartsTest::multi_parts_test_helper(true, "Ancient OR (education access)", &vec![], false, true), 6);
+        assert_eq!(MultiPartsTest::multi_parts_test_helper(true, "Ancient OR (education access)", &vec![], false, false), 3);
+        assert_eq!(MultiPartsTest::multi_parts_test_helper(true, "Human health", &vec![], false, false), 2);
+    }
+
+    #[test]
+    fn normal_test_multi_parts_with_filter() {
+        assert_eq!(MultiPartsTest::multi_parts_test_helper(true, "Ancient OR (education access)", &vec![16], true, true), 1);
+        assert_eq!(MultiPartsTest::multi_parts_test_helper(true, "Ancient OR (education access)", &vec![16], true, false), 1);
+        assert_eq!(MultiPartsTest::multi_parts_test_helper(true, "Human health", &vec![16], true, false), 1);
     }
 }

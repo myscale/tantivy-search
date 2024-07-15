@@ -4,19 +4,6 @@ use thiserror::Error;
 
 #[derive(Debug, Clone, Error)]
 #[allow(dead_code)]
-pub enum TokenizerUtilsError {
-    #[error("Failed to parse json str. '{0}'")]
-    JsonParseError(String),
-    #[error("Failed to deserialize json str. '{0}'")]
-    JsonDeserializeError(String),
-    #[error("Failed to config tokenizer. '{0}'")]
-    ConfigTokenizerError(String),
-    #[error("Unsupported tokenizer type. '{0}'")]
-    UnsupportedTokenizerType(String),
-}
-
-#[derive(Debug, Clone, Error)]
-#[allow(dead_code)]
 pub enum IndexUtilsError {
     #[error("Failed to convert cxx vector variable. '{0}'")]
     JsonParseError(String),
@@ -24,50 +11,49 @@ pub enum IndexUtilsError {
     JsonSerializeError(String),
     #[error("Failed to convert cxx vector variable. '{0}'")]
     JsonDeserializeError(String),
+
     #[error("Failed to handle directory. '{0}'")]
     DirectoryIOError(String),
-    #[error("Failed to config tokenizer. '{0}'")]
-    ConfigTokenizerError(String),
-
     #[error("Failed to remove directory. '{0}'")]
     RemoveDirectoryError(String),
     #[error("Failed to create directory. '{0}'")]
     CreateDirectoryError(String),
+
     #[error("Failed to read file. '{0}'")]
     ReadFileError(String),
     #[error("Failed to write file. '{0}'")]
     WriteFileError(String),
 
-    #[error(transparent)]
-    TokenizerUtilsError(#[from] TokenizerUtilsError),
+    #[error("Failed to config tokenizer. '{0}'")]
+    ConfigTokenizerError(String),
 
     #[error(transparent)]
-    TantivySearchTokenizerError(#[from] TantivySearchTokenizerError),
+    TokenizerError(#[from] TokenizerError),
 }
 
 #[derive(Debug, Clone, Error)]
 #[allow(dead_code)]
-pub enum TantivySearchTokenizerError {
+pub enum TokenizerError {
     #[error("Failed to deserialize index parameter. '{0}'")]
     JsonDeserializeError(String),
     #[error("Failed to serialize index parameter. '{0}'")]
     JsonSerializeError(String),
-    #[error("Failed to read index parameter from file. '{0}'")]
-    ReadFileError(String),
 
     #[error("Failed to remove directory. '{0}'")]
     RemoveDirectoryError(String),
     #[error("Error happened when create directory. '{0}'")]
     CreateDirectoryError(String),
+
     #[error("Error happened when write file. '{0}'")]
     WriteFileError(String),
+    #[error("Failed to read index parameter from file. '{0}'")]
+    ReadFileError(String),
 
     #[error("Failed to build TextAnalyzer. '{0}'")]
     BuildTokenizerError(String),
 
     #[error("Failed to build TextAnalyzer, TantivyError happened: '{0}'")]
     TantivyError(#[from] TantivyError),
-
 }
 
 #[derive(Debug, Clone, Error)]
@@ -75,7 +61,7 @@ pub enum TantivySearchTokenizerError {
 pub enum IndexSearcherError {
     #[error("Missing field/column in tantivy schema. '{0}'")]
     MissingFieldError(String),
-    #[error("At least one field should be choosed.")]
+    #[error("At least one field should be choose.")]
     EmptyFieldsError,
 
     #[error("Unexpect behavior. '{0}'")]
@@ -116,10 +102,7 @@ pub enum TantivySearchError {
     IndexUtilsError(#[from] IndexUtilsError),
 
     #[error(transparent)]
-    TokenizerUtilsError(#[from] TokenizerUtilsError),
-
-    #[error(transparent)]
-    TantivySearchTokenizerError(#[from] TantivySearchTokenizerError),
+    TokenizerError(#[from] TokenizerError),
 
     #[error(transparent)]
     IndexSearcherError(#[from] IndexSearcherError),
