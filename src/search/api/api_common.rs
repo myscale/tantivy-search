@@ -1,55 +1,74 @@
-use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::search::implements::free_index_reader;
 use crate::search::implements::get_indexed_doc_counts;
 use crate::search::implements::load_index_reader;
 use crate::CXX_STRING_CONVERTER;
-use crate::{common::constants::LOG_CALLBACK, ERROR};
 use cxx::CxxString;
+use crate::ffi::{FFIBoolResult, FFIError, FFIU64Result};
+use crate::utils::api_utils::ApiUtils;
 
-pub fn ffi_load_index_reader(index_path: &CxxString) -> bool {
+pub fn ffi_load_index_reader(index_path: &CxxString) -> FFIBoolResult {
     static FUNC_NAME: &str = "ffi_load_index_reader";
 
     let index_path: String = match CXX_STRING_CONVERTER.convert(index_path) {
         Ok(path) => path,
         Err(e) => {
-            ERROR!(function: FUNC_NAME, "Can't convert 'index_path', message: {}", e);
-            return false;
+            return ApiUtils::handle_error(FUNC_NAME, "Can't convert 'index_path'", e.to_string());
         }
     };
 
-    load_index_reader(&index_path).unwrap_or_else(|e| {
-        ERROR!(function: FUNC_NAME, "Error loading index reader: {}", e);
-        false
-    })
+    match load_index_reader(&index_path) {
+        Ok(result) => FFIBoolResult {
+            result,
+            error: FFIError {
+                is_error: false,
+                message: String::new(),
+            },
+        },
+        Err(e) => {
+            ApiUtils::handle_error(FUNC_NAME, "Error loading index reader", e.to_string())
+        }
+    }
 }
 
-pub fn ffi_free_index_reader(index_path: &CxxString) -> bool {
+pub fn ffi_free_index_reader(index_path: &CxxString) -> FFIBoolResult {
     static FUNC_NAME: &str = "ffi_free_index_reader";
 
     let index_path: String = match CXX_STRING_CONVERTER.convert(index_path) {
         Ok(path) => path,
         Err(e) => {
-            ERROR!(function: FUNC_NAME, "Can't convert 'index_path', message: {}", e);
-            return false;
+            return ApiUtils::handle_error(FUNC_NAME, "Can't convert 'index_path'", e.to_string());
         }
     };
 
-    free_index_reader(&index_path)
+    FFIBoolResult {
+        result: free_index_reader(&index_path),
+        error: FFIError {
+            is_error: false,
+            message: String::new(),
+        },
+    }
 }
 
-pub fn ffi_get_indexed_doc_counts(index_path: &CxxString) -> u64 {
+pub fn ffi_get_indexed_doc_counts(index_path: &CxxString) -> FFIU64Result {
     static FUNC_NAME: &str = "ffi_get_indexed_doc_counts";
 
     let index_path: String = match CXX_STRING_CONVERTER.convert(index_path) {
         Ok(path) => path,
         Err(e) => {
-            ERROR!(function: FUNC_NAME, "Can't convert 'index_path', message: {}", e);
-            return 0;
+            return ApiUtils::handle_error(FUNC_NAME, "Can't convert 'index_path'", e.to_string());
         }
     };
 
-    get_indexed_doc_counts(&index_path).unwrap_or_else(|e| {
-        ERROR!(function: FUNC_NAME, "Error getting indexed doc counts: {}", e);
-        0
-    })
+    match get_indexed_doc_counts(&index_path) {
+        Ok(result) => FFIU64Result {
+            result,
+            error: FFIError {
+                is_error: false,
+                message: String::new(),
+            },
+        },
+        Err(e) => {
+            ApiUtils::handle_error(FUNC_NAME, "Error getting indexed doc counts", e.to_string())
+        }
+    }
 }

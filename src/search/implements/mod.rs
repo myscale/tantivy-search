@@ -1,5 +1,4 @@
 pub mod strategy;
-mod tests;
 mod api_clickhouse;
 mod api_common;
 mod api_myscale;

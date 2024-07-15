@@ -714,6 +714,13 @@ struct RowIdWithScore;
 struct DocWithFreq;
 struct FieldTokenNums;
 struct Statistics;
+struct FFIError;
+struct FFIBoolResult;
+struct FFIU64Result;
+struct FFIVecU8Result;
+struct FFIVecRowIdWithScoreResult;
+struct FFIVecDocWithFreqResult;
+struct FFIFieldTokenNumsResult;
 
 #ifndef CXXBRIDGE1_STRUCT_RowIdWithScore
 #define CXXBRIDGE1_STRUCT_RowIdWithScore
@@ -757,27 +764,97 @@ struct FieldTokenNums final {
 #define CXXBRIDGE1_STRUCT_Statistics
 struct Statistics final {
   ::rust::Vec<::DocWithFreq> docs_freq;
-  ::std::uint64_t total_num_tokens;
+  ::rust::Vec<::FieldTokenNums> total_num_tokens;
   ::std::uint64_t total_num_docs;
 
   using IsRelocatable = ::std::true_type;
 };
 #endif // CXXBRIDGE1_STRUCT_Statistics
 
-bool ffi_verify_index_parameter(::std::string const &index_json_parameter) noexcept;
+#ifndef CXXBRIDGE1_STRUCT_FFIError
+#define CXXBRIDGE1_STRUCT_FFIError
+struct FFIError final {
+  bool is_error;
+  ::rust::String message;
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_FFIError
+
+#ifndef CXXBRIDGE1_STRUCT_FFIBoolResult
+#define CXXBRIDGE1_STRUCT_FFIBoolResult
+struct FFIBoolResult final {
+  bool result;
+  ::FFIError error;
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_FFIBoolResult
+
+#ifndef CXXBRIDGE1_STRUCT_FFIU64Result
+#define CXXBRIDGE1_STRUCT_FFIU64Result
+struct FFIU64Result final {
+  ::std::uint64_t result;
+  ::FFIError error;
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_FFIU64Result
+
+#ifndef CXXBRIDGE1_STRUCT_FFIVecU8Result
+#define CXXBRIDGE1_STRUCT_FFIVecU8Result
+struct FFIVecU8Result final {
+  ::rust::Vec<::std::uint8_t> result;
+  ::FFIError error;
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_FFIVecU8Result
+
+#ifndef CXXBRIDGE1_STRUCT_FFIVecRowIdWithScoreResult
+#define CXXBRIDGE1_STRUCT_FFIVecRowIdWithScoreResult
+struct FFIVecRowIdWithScoreResult final {
+  ::rust::Vec<::RowIdWithScore> result;
+  ::FFIError error;
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_FFIVecRowIdWithScoreResult
+
+#ifndef CXXBRIDGE1_STRUCT_FFIVecDocWithFreqResult
+#define CXXBRIDGE1_STRUCT_FFIVecDocWithFreqResult
+struct FFIVecDocWithFreqResult final {
+  ::rust::Vec<::DocWithFreq> result;
+  ::FFIError error;
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_FFIVecDocWithFreqResult
+
+#ifndef CXXBRIDGE1_STRUCT_FFIFieldTokenNumsResult
+#define CXXBRIDGE1_STRUCT_FFIFieldTokenNumsResult
+struct FFIFieldTokenNumsResult final {
+  ::rust::Vec<::FieldTokenNums> result;
+  ::FFIError error;
+
+  using IsRelocatable = ::std::true_type;
+};
+#endif // CXXBRIDGE1_STRUCT_FFIFieldTokenNumsResult
+
+::FFIBoolResult ffi_verify_index_parameter(::std::string const &index_json_parameter) noexcept;
 
 // Create tantivy index.
 // arguments:
 // - `index_path`: index directory.
 // - `column_names`: which columns will be used to build index.
 // - `index_json_parameter`: config index with json.
-bool ffi_create_index_with_parameter(::std::string const &index_path, ::std::vector<::std::string> const &column_names, ::std::string const &index_json_parameter) noexcept;
+::FFIBoolResult ffi_create_index_with_parameter(::std::string const &index_path, ::std::vector<::std::string> const &column_names, ::std::string const &index_json_parameter) noexcept;
 
 // Create tantivy index by default.
 // arguments:
 // - `index_path`: index directory.
 // - `column_names`: which columns will be used to build index.
-bool ffi_create_index(::std::string const &index_path, ::std::vector<::std::string> const &column_names) noexcept;
+::FFIBoolResult ffi_create_index(::std::string const &index_path, ::std::vector<::std::string> const &column_names) noexcept;
 
 // Index multi column docs with given rowId.
 // arguments:
@@ -785,89 +862,89 @@ bool ffi_create_index(::std::string const &index_path, ::std::vector<::std::stri
 // - `row_id`: row_id given by ClickHouse.
 // - `column_names`: align with column_docs.
 // - `column_docs`: align with column_names.
-bool ffi_index_multi_column_docs(::std::string const &index_path, ::std::uint64_t row_id, ::std::vector<::std::string> const &column_names, ::std::vector<::std::string> const &column_docs) noexcept;
+::FFIBoolResult ffi_index_multi_column_docs(::std::string const &index_path, ::std::uint64_t row_id, ::std::vector<::std::string> const &column_names, ::std::vector<::std::string> const &column_docs) noexcept;
 
 // Delete a group of rowIds.
 // arguments:
 // - `index_path`: index directory.
 // - `row_ids`: a group of rowIds need be deleted.
-bool ffi_delete_row_ids(::std::string const &index_path, ::std::vector<::std::uint32_t> const &row_ids) noexcept;
+::FFIBoolResult ffi_delete_row_ids(::std::string const &index_path, ::std::vector<::std::uint32_t> const &row_ids) noexcept;
 
 // Commit index writer
 // arguments:
 // - `index_path`: index directory.
-bool ffi_index_writer_commit(::std::string const &index_path) noexcept;
+::FFIBoolResult ffi_index_writer_commit(::std::string const &index_path) noexcept;
 
 // Free index writer
 // arguments:
 // - `index_path`: index directory.
-bool ffi_free_index_writer(::std::string const &index_path) noexcept;
+::FFIBoolResult ffi_free_index_writer(::std::string const &index_path) noexcept;
 
 // Load index reader
 // arguments:
 // - `index_path`: index directory.
-bool ffi_load_index_reader(::std::string const &index_path) noexcept;
+::FFIBoolResult ffi_load_index_reader(::std::string const &index_path) noexcept;
 
 // Free index reader
 // arguments:
 // - `index_path`: index directory.
-bool ffi_free_index_reader(::std::string const &index_path) noexcept;
+::FFIBoolResult ffi_free_index_reader(::std::string const &index_path) noexcept;
 
 // Get indexed docs numbers.
 // arguments:
 // - `index_path`: index directory.
-::std::uint64_t ffi_get_indexed_doc_counts(::std::string const &index_path) noexcept;
+::FFIU64Result ffi_get_indexed_doc_counts(::std::string const &index_path) noexcept;
 
 // Execute a term query and return rowIds u8 bitmap.
 // arguments:
 // - `index_path`: index directory.
 // - `column_name`: which column will execute search.
 // - `term`: term needs to be searched.
-::rust::Vec<::std::uint8_t> ffi_query_term_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &term) noexcept;
+::FFIVecU8Result ffi_query_term_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &term) noexcept;
 
 // Execute a group of terms query and return rowIds u8 bitmap.
 // arguments:
 // - `index_path`: index directory.
 // - `column_name`: which column will execute search.
 // - `terms`: terms need to be searched.
-::rust::Vec<::std::uint8_t> ffi_query_terms_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::vector<::std::string> const &terms) noexcept;
+::FFIVecU8Result ffi_query_terms_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::vector<::std::string> const &terms) noexcept;
 
 // Execute a sentence query and return rowIds u8 bitmap.
 // arguments:
 // - `index_path`: index directory.
 // - `column_name`: which column will execute search.
 // - `sentence`: sentence needs to be searched.
-::rust::Vec<::std::uint8_t> ffi_query_sentence_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &sentence) noexcept;
+::FFIVecU8Result ffi_query_sentence_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &sentence) noexcept;
 
 // Execute a regex query and return rowIds u8 bitmap.
 // arguments:
 // - `index_path`: index directory.
 // - `column_name`: which column will execute search.
 // - `pattern`: pattern should be given by ClickHouse.
-::rust::Vec<::std::uint8_t> ffi_regex_term_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &pattern) noexcept;
+::FFIVecU8Result ffi_regex_term_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &pattern) noexcept;
 
 // Execute a bm25 query.
 // arguments:
 // - `index_path`: index directory.
 // - `sentence`: from ClickHouse TextSearch function.
-// - `topk`: only return top k related results.
-// - `u8_aived_bitmap`: alived rowIds given by u8 bitmap.
-// - `query_with_filter`: whether use alived_bitmap or not.
+// - `top_k`: only return top k related results.
+// - `u8_alive_bitmap`: alive row ids given by u8 bitmap.
+// - `query_with_filter`:use alive_bitmap or not.
 // - `statistics`: for multi parts bm25 statistics info.
-::rust::Vec<::RowIdWithScore> ffi_bm25_search(::std::string const &index_path, ::std::string const &sentence, ::std::uint32_t top_k, ::std::vector<::std::uint8_t> const &u8_alive_bitmap, bool query_with_filter, bool enable_nlq, bool operator_or, ::Statistics const &statistics) noexcept;
+::FFIVecRowIdWithScoreResult ffi_bm25_search(::std::string const &index_path, ::std::string const &sentence, ::std::uint32_t top_k, ::std::vector<::std::uint8_t> const &u8_alive_bitmap, bool query_with_filter, bool enable_nlq, bool operator_or, ::Statistics const &statistics) noexcept;
 
 // Get doc freq for current part.
 // arguments:
 // - `index_path`: index directory.
 // - `sentence`: query_str.
-::rust::Vec<::DocWithFreq> ffi_get_doc_freq(::std::string const &index_path, ::std::string const &sentence) noexcept;
+::FFIVecDocWithFreqResult ffi_get_doc_freq(::std::string const &index_path, ::std::string const &sentence) noexcept;
 
 // Get total num docs for current part.
 // arguments:
 // - `index_path`: index directory.
-::std::uint64_t ffi_get_total_num_docs(::std::string const &index_path) noexcept;
+::FFIU64Result ffi_get_total_num_docs(::std::string const &index_path) noexcept;
 
 // Get total num tokens for current part.
 // arguments:
 // - `index_path`: index directory.
-::std::uint64_t ffi_get_total_num_tokens(::std::string const &index_path) noexcept;
+::FFIFieldTokenNumsResult ffi_get_total_num_tokens(::std::string const &index_path) noexcept;
