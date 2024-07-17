@@ -7,7 +7,7 @@ use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::search::implements::SearchUtils;
 use crate::search::implements::strategy::QueryExecutor;
 use crate::search::implements::strategy::RegexQueryStrategy;
-use crate::search::utils::convert_utils::ConvertUtils;
+use crate::search::utils::ConvertUtils;
 use crate::tokenizer::ingredient::Config;
 use crate::tokenizer::parser::TokenizerWrapper;
 use crate::utils::index_utils::IndexUtils;

@@ -1,13 +1,11 @@
 use crate::cxx_vector_converter;
-use crate::ffi::Statistics;
+use crate::ffi::{FFIError, FFIFieldTokenNumsResult, FFIU64Result, FFIVecDocWithFreqResult, FFIVecRowIdWithScoreResult, Statistics};
 use crate::search::implements::{bm25_natural_language_search, bm25_standard_search, get_doc_freq,
                                 get_total_num_docs, get_total_num_tokens};
-use crate::{DocWithFreq, RowIdWithScore, CXX_STRING_CONVERTER};
-use crate::{common::constants::LOG_CALLBACK, ERROR};
-use crate::logger::logger_bridge::TantivySearchLogger;
-
+use crate::CXX_STRING_CONVERTER;
 use cxx::CxxString;
 use cxx::CxxVector;
+use crate::utils::api_utils::ApiUtils;
 
 pub fn ffi_bm25_search(
     index_path: &CxxString,
@@ -18,7 +16,7 @@ pub fn ffi_bm25_search(
     enable_nlq: bool,
     operator_or: bool,
     statistics: &Statistics,
-) -> Vec<RowIdWithScore> {
+) -> FFIVecRowIdWithScoreResult {
     static FUNC_NAME: &str = "ffi_bm25_search";
     static FUNC_NAME_WITH_NLQ: &str = "ffi_bm25_natural_language_search";
     static FUNC_NAME_WITHOUT_NLQ: &str = "ffi_bm25_standard_search";
@@ -26,29 +24,28 @@ pub fn ffi_bm25_search(
     let index_path: String = match CXX_STRING_CONVERTER.convert(index_path) {
         Ok(path) => path,
         Err(e) => {
-            ERROR!(function: FUNC_NAME, "Can't convert 'index_path', message: {}", e);
-            return Vec::new();
+            return ApiUtils::handle_error(FUNC_NAME, "Can't convert 'index_path'", e.to_string());
         }
     };
 
     let sentence: String = match CXX_STRING_CONVERTER.convert(sentence) {
         Ok(q) => q,
         Err(e) => {
-            ERROR!(function: FUNC_NAME, "Can't convert 'sentence', message: {}", e);
-            return Vec::new();
+            return ApiUtils::handle_error(FUNC_NAME, "Can't convert 'sentence'", e.to_string());
+
         }
     };
 
     let u8_alive_bitmap: Vec<u8> = match cxx_vector_converter::<u8>().convert(u8_alive_bitmap) {
         Ok(bitmap) => bitmap,
         Err(e) => {
-            ERROR!(function: FUNC_NAME, "Can't convert vector 'u8_alive_bitmap', message: {}", e);
-            return Vec::new();
+            return ApiUtils::handle_error(FUNC_NAME, "Can't convert 'u8_alive_bitmap'", e.to_string());
+
         }
     };
 
     if enable_nlq {
-        bm25_natural_language_search(
+        match bm25_natural_language_search(
             &index_path,
             &sentence,
             top_k,
@@ -57,12 +54,20 @@ pub fn ffi_bm25_search(
             operator_or,
             statistics,
             false,
-        ).unwrap_or_else(|e| {
-            ERROR!(function: FUNC_NAME_WITH_NLQ, "Error performing BM25 natural language search with statistics: {}", e);
-            Vec::new()
-        })
+        ) {
+            Ok(result) => FFIVecRowIdWithScoreResult {
+                result,
+                error: FFIError {
+                    is_error: false,
+                    message: String::new(),
+                },
+            },
+            Err(e) => {
+                ApiUtils::handle_error(FUNC_NAME_WITH_NLQ, "Error performing BM25 natural language search with statistics", e.to_string())
+            }
+        }
     } else {
-        bm25_standard_search(
+        match bm25_standard_search(
             &index_path,
             &sentence,
             top_k,
@@ -71,70 +76,97 @@ pub fn ffi_bm25_search(
             operator_or,
             statistics,
             false,
-        ).unwrap_or_else(|e| {
-            ERROR!(function: FUNC_NAME_WITHOUT_NLQ, "Error performing BM25 standard search with statistics: {}", e);
-            Vec::new()
-        })
+        ) {
+            Ok(result) => FFIVecRowIdWithScoreResult {
+                result,
+                error: FFIError {
+                    is_error: false,
+                    message: String::new(),
+                },
+            },
+            Err(e) => {
+                ApiUtils::handle_error(FUNC_NAME_WITHOUT_NLQ, "Error performing BM25 standard search with statistics", e.to_string())
+            }
+        }
     }
 }
 
-pub fn ffi_get_doc_freq(index_path: &CxxString, sentence: &CxxString) -> Vec<DocWithFreq> {
+pub fn ffi_get_doc_freq(index_path: &CxxString, sentence: &CxxString) -> FFIVecDocWithFreqResult {
     static FUNC_NAME: &str = "ffi_get_doc_freq";
 
     let index_path: String = match CXX_STRING_CONVERTER.convert(index_path) {
         Ok(path) => path,
         Err(e) => {
-            ERROR!(function: FUNC_NAME, "Can't convert 'index_path', message: {}", e);
-            return Vec::new();
+            return ApiUtils::handle_error(FUNC_NAME, "Can't convert 'index_path'", e.to_string());
         }
     };
 
     let sentence: String = match CXX_STRING_CONVERTER.convert(sentence) {
         Ok(q) => q,
         Err(e) => {
-            ERROR!(function: FUNC_NAME, "Can't convert 'sentence', message: {}", e);
-            return Vec::new();
+            return ApiUtils::handle_error(FUNC_NAME, "Can't convert 'sentence'", e.to_string());
         }
     };
 
-    get_doc_freq(&index_path, &sentence).unwrap_or_else(|e| {
-        ERROR!(function: FUNC_NAME, "Error performing get_doc_freq: {}", e);
-        Vec::new()
-    })
+    match get_doc_freq(&index_path, &sentence) {
+        Ok(result) => FFIVecDocWithFreqResult {
+            result,
+            error: FFIError {
+                is_error: false,
+                message: String::new(),
+            },
+        },
+        Err(e) => {
+            ApiUtils::handle_error(FUNC_NAME, "Error happened when execute `get_doc_freq`", e.to_string())
+        }
+    }
 }
 
-pub fn ffi_get_total_num_docs(index_path: &CxxString) -> u64 {
+pub fn ffi_get_total_num_docs(index_path: &CxxString) -> FFIU64Result {
     static FUNC_NAME: &str = "ffi_get_total_num_docs";
 
     let index_path: String = match CXX_STRING_CONVERTER.convert(index_path) {
         Ok(path) => path,
         Err(e) => {
-            ERROR!(function: FUNC_NAME, "Can't convert 'index_path', message: {}", e);
-            return 0u64;
+            return ApiUtils::handle_error(FUNC_NAME, "Can't convert 'index_path'", e.to_string());
         }
     };
-    get_total_num_docs(&index_path).unwrap_or_else(|e| {
-        ERROR!(function: FUNC_NAME, "Error performing get_total_num_docs: {}", e);
-        0u64
-    })
+    match get_total_num_docs(&index_path) {
+        Ok(result) => FFIU64Result {
+            result,
+            error: FFIError {
+                is_error: false,
+                message: String::new(),
+            },
+        },
+        Err(e) => {
+            ApiUtils::handle_error(FUNC_NAME, "Error happened when execute `get_total_num_docs`", e.to_string())
+
+        }
+    }
 }
 
-pub fn ffi_get_total_num_tokens(index_path: &CxxString) -> u64 {
-    // pub fn ffi_get_total_num_tokens(index_path: &CxxString) -> Vec<FieldTokenNums> {
+pub fn ffi_get_total_num_tokens(index_path: &CxxString) -> FFIFieldTokenNumsResult {
     static FUNC_NAME: &str = "ffi_get_total_num_tokens";
 
     let index_path: String = match CXX_STRING_CONVERTER.convert(index_path) {
         Ok(path) => path,
         Err(e) => {
-            ERROR!(function: FUNC_NAME, "Can't convert 'index_path', message: {}", e);
-            return 0u64;
-            // return vec![];
+            return ApiUtils::handle_error(FUNC_NAME, "Can't convert 'index_path'", e.to_string());
         }
     };
 
-    get_total_num_tokens(&index_path).unwrap_or_else(|e| {
-        ERROR!(function: FUNC_NAME, "Error performing get_total_num_tokens: {}", e);
-        0u64
-        // vec![]
-    })
+    match get_total_num_tokens(&index_path) {
+        Ok(result) => FFIFieldTokenNumsResult {
+            result,
+            error: FFIError {
+                is_error: false,
+                message: String::new(),
+            },
+        },
+        Err(e) => {
+            ApiUtils::handle_error(FUNC_NAME, "Error happened when execute `get_total_num_docs`", e.to_string())
+
+        }
+    }
 }

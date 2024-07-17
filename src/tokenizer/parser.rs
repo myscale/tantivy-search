@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::collections::HashMap;
 use jieba_rs::Jieba;
 use tantivy::tokenizer::{LowerCaser, NgramTokenizer, RawTokenizer, RemoveLongFilter, SimpleTokenizer, Stemmer, StopWordFilter, TextAnalyzer, TextAnalyzerBuilder, WhitespaceTokenizer};
-use crate::common::errors::TantivySearchTokenizerError;
+use crate::common::errors::TokenizerError;
 use crate::tokenizer::core::cangjie::{CangjieTokenizer, CangjieOption};
 use crate::tokenizer::core::icu::{IcuOption, IcuTokenizer};
 use crate::tokenizer::ingredient::{Config, Tokenizer};
@@ -104,7 +104,7 @@ impl<'a> TokenizerWrapper<'a> {
         }
     }
 
-    pub fn generate_text_analyzer(&self) -> Result<TextAnalyzer, TantivySearchTokenizerError> {
+    pub fn generate_text_analyzer(&self) -> Result<TextAnalyzer, TokenizerError> {
         match self.tokenizer {
             Tokenizer::Default { .. } => {
                 Ok(
@@ -173,7 +173,7 @@ impl<'a> TokenizerWrapper<'a> {
                 ..
             } => {
                 if min_gram >= max_gram || (*min_gram == 0 && *max_gram == 0) {
-                    return Err(TantivySearchTokenizerError::BuildTokenizerError(
+                    return Err(TokenizerError::BuildTokenizerError(
                         "`min_gram` should be smaller than `max_gram`".to_string(),
                     ));
                 }
@@ -183,7 +183,7 @@ impl<'a> TokenizerWrapper<'a> {
                         *min_gram,
                         *max_gram,
                         *prefix_only,
-                    ).map_err(|e| { TantivySearchTokenizerError::TantivyError(e) })?
+                    ).map_err(|e| { TokenizerError::TantivyError(e) })?
                 ).dynamic();
 
                 builder = builder.filter_dynamic(RemoveLongFilter::limit(*length_limit));
@@ -260,7 +260,7 @@ pub struct TokenizerUtils;
 impl TokenizerUtils {
     pub fn parser_from_tokenizer_config(
         tokenizer_config: Config
-    ) -> Result<HashMap<String, TokenizerConfig>, TantivySearchTokenizerError> {
+    ) -> Result<HashMap<String, TokenizerConfig>, TokenizerError> {
         let mut tokenizer_map: HashMap<String, TokenizerConfig> = HashMap::new();
         for (col_name, col) in tokenizer_config.get_columns() {
             let tokenizer = col.get_tokenizer();
@@ -277,19 +277,19 @@ impl TokenizerUtils {
 
     pub fn parser_index_json_parameter(
         tokenizer_json_str: &str
-    ) -> Result<HashMap<String, TokenizerConfig>, TantivySearchTokenizerError> {
+    ) -> Result<HashMap<String, TokenizerConfig>, TokenizerError> {
         let config: Config = serde_json::from_str(tokenizer_json_str)
             .map_err(
-                |e| TantivySearchTokenizerError::JsonDeserializeError(e.to_string())
+                |e| TokenizerError::JsonDeserializeError(e.to_string())
             )?;
         Self::parser_from_tokenizer_config(config)
     }
 
     pub fn verify_index_json_parameter(
         tokenizer_json_str: &str
-    ) -> Result<bool, TantivySearchTokenizerError> {
+    ) -> Result<bool, TokenizerError> {
         let _: Config = serde_json::from_str(tokenizer_json_str)
-            .map_err(|e| TantivySearchTokenizerError::JsonDeserializeError(e.to_string()))?;
+            .map_err(|e| TokenizerError::JsonDeserializeError(e.to_string()))?;
         Ok(true)
     }
 }

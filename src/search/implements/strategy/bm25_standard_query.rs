@@ -4,7 +4,7 @@ use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
 use crate::search::implements::strategy::query_strategy::QueryStrategy;
 use crate::{common::constants::LOG_CALLBACK, ERROR};
 use crate::logger::logger_bridge::TantivySearchLogger;
-use tantivy::query::BooleanQuery;
+use tantivy::query::{BooleanQuery, Occur, Query};
 use tantivy::schema::{FieldType, Schema, TextFieldIndexing};
 use tantivy::tokenizer::{BoxTokenStream, TextAnalyzer};
 use tantivy::{Searcher, Term};
@@ -48,8 +48,10 @@ impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25StandardQueryStrategy<'a> {
             top_docs_collector = top_docs_collector.with_alive_u8(self.u8_alive_bitmap.clone());
         }
 
-        let mut terms: Vec<Term> = Vec::new();
+        let mut subqueries: Vec<(Occur, Box<dyn Query>)> = Vec::new();
+
         for col_field in &fields {
+            let mut terms: Vec<Term> = Vec::new();
             let field_type: &FieldType = schema.get_field_entry(*col_field).field_type();
             if let FieldType::Str(ref str_options) = field_type {
                 let indexing_options: &TextFieldIndexing =
@@ -72,6 +74,14 @@ impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25StandardQueryStrategy<'a> {
                 token_stream.process(&mut |token| {
                     terms.push(Term::from_field_text(*col_field, &token.text));
                 });
+
+                if *self.operation_or {
+                    let subquery: Box<dyn Query> = Box::new(BooleanQuery::new_multiterms_query(terms));
+                    subqueries.push((Occur::Should, subquery));
+                } else {
+                    let subquery: Box<dyn Query> = Box::new(BooleanQuery::new_multiterms_and_query(terms));
+                    subqueries.push((Occur::Should, subquery));
+                }
             } else {
                 let error_msg = "Not expected, column field type must be str type.";
                 ERROR!(function: FUNC_NAME, "{}", error_msg);
@@ -79,22 +89,11 @@ impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25StandardQueryStrategy<'a> {
             }
         }
 
-        if *self.operation_or {
-            let boolean_query = BooleanQuery::new_multiterms_query(terms);
-            searcher
-                .search(&boolean_query, &top_docs_collector)
-                .map_err(|e| {
-                    ERROR!(function: FUNC_NAME, "{}", e);
-                    IndexSearcherError::TantivyError(e)
-                })
-        } else {
-            let boolean_query = BooleanQuery::new_multiterms_and_query(terms);
-            searcher
-                .search(&boolean_query, &top_docs_collector)
-                .map_err(|e| {
-                    ERROR!(function: FUNC_NAME, "{}", e);
-                    IndexSearcherError::TantivyError(e)
-                })
-        }
+        searcher
+            .search(&BooleanQuery::new(subqueries), &top_docs_collector)
+            .map_err(|e| {
+                ERROR!(function: FUNC_NAME, "{}", e);
+                IndexSearcherError::TantivyError(e)
+            })
     }
 }

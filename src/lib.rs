@@ -11,10 +11,8 @@ mod search;
 mod tokenizer;
 mod utils;
 use common::constants::*;
-use index::api::api_index::*;
-use search::api::api_clickhouse::*;
-use search::api::api_common::*;
-use search::api::api_myscale::*;
+use index::api::*;
+use search::api::*;
 use utils::ffi_utils::*;
 // re-export log ffi function.
 pub use logger::ffi_logger::*;
@@ -47,13 +45,54 @@ pub mod ffi {
     #[derive(Debug, Clone)]
     pub struct Statistics {
         pub docs_freq: Vec<DocWithFreq>,
-        // pub total_num_tokens: Vec<FieldTokenNums>,
-        pub total_num_tokens: u64,
+        pub total_num_tokens: Vec<FieldTokenNums>,
         pub total_num_docs: u64,
     }
 
+    #[derive(Debug, Clone)]
+    pub struct FFIError {
+        pub is_error: bool,
+        pub message: String,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct FFIBoolResult {
+        pub result: bool,
+        pub error: FFIError,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct FFIU64Result {
+        pub result: u64,
+        pub error: FFIError,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct FFIVecU8Result {
+        pub result: Vec<u8>,
+        pub error: FFIError,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct FFIVecRowIdWithScoreResult {
+        pub result: Vec<RowIdWithScore>,
+        pub error: FFIError,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct FFIVecDocWithFreqResult {
+        pub result:Vec<DocWithFreq>,
+        pub error: FFIError,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct FFIFieldTokenNumsResult {
+        pub result: Vec<FieldTokenNums>,
+        pub error: FFIError,
+    }
+
     extern "Rust" {
-        pub fn ffi_verify_index_parameter(index_json_parameter: &CxxString) -> bool;
+        pub fn ffi_verify_index_parameter(index_json_parameter: &CxxString) -> FFIBoolResult;
 
         /// Create tantivy index.
         /// arguments:
@@ -64,13 +103,13 @@ pub mod ffi {
             index_path: &CxxString,
             column_names: &CxxVector<CxxString>,
             index_json_parameter: &CxxString,
-        ) -> bool;
+        ) -> FFIBoolResult;
 
         /// Create tantivy index by default.
         /// arguments:
         /// - `index_path`: index directory.
         /// - `column_names`: which columns will be used to build index.
-        fn ffi_create_index(index_path: &CxxString, column_names: &CxxVector<CxxString>) -> bool;
+        fn ffi_create_index(index_path: &CxxString, column_names: &CxxVector<CxxString>) -> FFIBoolResult;
 
         /// Index multi column docs with given rowId.
         /// arguments:
@@ -83,38 +122,38 @@ pub mod ffi {
             row_id: u64,
             column_names: &CxxVector<CxxString>,
             column_docs: &CxxVector<CxxString>,
-        ) -> bool;
+        ) -> FFIBoolResult;
 
         /// Delete a group of rowIds.
         /// arguments:
         /// - `index_path`: index directory.
         /// - `row_ids`: a group of rowIds need be deleted.
-        fn ffi_delete_row_ids(index_path: &CxxString, row_ids: &CxxVector<u32>) -> bool;
+        fn ffi_delete_row_ids(index_path: &CxxString, row_ids: &CxxVector<u32>) -> FFIBoolResult;
 
         /// Commit index writer
         /// arguments:
         /// - `index_path`: index directory.
-        fn ffi_index_writer_commit(index_path: &CxxString) -> bool;
+        fn ffi_index_writer_commit(index_path: &CxxString) -> FFIBoolResult;
 
         /// Free index writer
         /// arguments:
         /// - `index_path`: index directory.
-        fn ffi_free_index_writer(index_path: &CxxString) -> bool;
+        fn ffi_free_index_writer(index_path: &CxxString) -> FFIBoolResult;
 
         /// Load index reader
         /// arguments:
         /// - `index_path`: index directory.
-        fn ffi_load_index_reader(index_path: &CxxString) -> bool;
+        fn ffi_load_index_reader(index_path: &CxxString) -> FFIBoolResult;
 
         /// Free index reader
         /// arguments:
         /// - `index_path`: index directory.
-        fn ffi_free_index_reader(index_path: &CxxString) -> bool;
+        fn ffi_free_index_reader(index_path: &CxxString) -> FFIBoolResult;
 
         /// Get indexed docs numbers.
         /// arguments:
         /// - `index_path`: index directory.
-        fn ffi_get_indexed_doc_counts(index_path: &CxxString) -> u64;
+        fn ffi_get_indexed_doc_counts(index_path: &CxxString) -> FFIU64Result;
 
         /// Execute a term query and return rowIds u8 bitmap.
         /// arguments:
@@ -125,7 +164,7 @@ pub mod ffi {
             index_path: &CxxString,
             column_name: &CxxString,
             term: &CxxString,
-        ) -> Vec<u8>;
+        ) -> FFIVecU8Result;
 
         /// Execute a group of terms query and return rowIds u8 bitmap.
         /// arguments:
@@ -136,7 +175,7 @@ pub mod ffi {
             index_path: &CxxString,
             column_name: &CxxString,
             terms: &CxxVector<CxxString>,
-        ) -> Vec<u8>;
+        ) -> FFIVecU8Result;
 
         /// Execute a sentence query and return rowIds u8 bitmap.
         /// arguments:
@@ -147,7 +186,7 @@ pub mod ffi {
             index_path: &CxxString,
             column_name: &CxxString,
             sentence: &CxxString,
-        ) -> Vec<u8>;
+        ) -> FFIVecU8Result;
 
         /// Execute a regex query and return rowIds u8 bitmap.
         /// arguments:
@@ -158,15 +197,15 @@ pub mod ffi {
             index_path: &CxxString,
             column_name: &CxxString,
             pattern: &CxxString,
-        ) -> Vec<u8>;
+        ) -> FFIVecU8Result;
 
         /// Execute a bm25 query.
         /// arguments:
         /// - `index_path`: index directory.
         /// - `sentence`: from ClickHouse TextSearch function.
-        /// - `topk`: only return top k related results.
-        /// - `u8_aived_bitmap`: alived rowIds given by u8 bitmap.
-        /// - `query_with_filter`: whether use alived_bitmap or not.
+        /// - `top_k`: only return top k related results.
+        /// - `u8_alive_bitmap`: alive row ids given by u8 bitmap.
+        /// - `query_with_filter`:use alive_bitmap or not.
         /// - `statistics`: for multi parts bm25 statistics info.
         pub fn ffi_bm25_search(
             index_path: &CxxString,
@@ -177,23 +216,23 @@ pub mod ffi {
             enable_nlq: bool,
             operator_or: bool,
             statistics: &Statistics,
-        ) -> Vec<RowIdWithScore>;
+        ) -> FFIVecRowIdWithScoreResult;
 
         /// Get doc freq for current part.
         /// arguments:
         /// - `index_path`: index directory.
         /// - `sentence`: query_str.
-        pub fn ffi_get_doc_freq(index_path: &CxxString, sentence: &CxxString) -> Vec<DocWithFreq>;
+        pub fn ffi_get_doc_freq(index_path: &CxxString, sentence: &CxxString) -> FFIVecDocWithFreqResult;
 
         /// Get total num docs for current part.
         /// arguments:
         /// - `index_path`: index directory.
-        pub fn ffi_get_total_num_docs(index_path: &CxxString) -> u64;
+        pub fn ffi_get_total_num_docs(index_path: &CxxString) -> FFIU64Result;
 
         /// Get total num tokens for current part.
         /// arguments:
         /// - `index_path`: index directory.
-        pub fn ffi_get_total_num_tokens(index_path: &CxxString) -> u64;
+        pub fn ffi_get_total_num_tokens(index_path: &CxxString) ->FFIFieldTokenNumsResult;
     }
 }
 
@@ -246,8 +285,7 @@ impl DocWithFreq {
 
 #[allow(dead_code)]
 impl Statistics {
-    // fn new(docs_freq: Vec<DocWithFreq>, total_num_tokens: Vec<FieldTokenNums>, total_num_docs: u64) -> Self {
-    fn new(docs_freq: Vec<DocWithFreq>, total_num_tokens: u64, total_num_docs: u64) -> Self {
+    fn new(docs_freq: Vec<DocWithFreq>, total_num_tokens: Vec<FieldTokenNums>, total_num_docs: u64) -> Self {
         Statistics {
             docs_freq,
             total_num_tokens,
@@ -257,7 +295,7 @@ impl Statistics {
     fn default() -> Self {
         Statistics {
             docs_freq: vec![],
-            total_num_tokens: 0,
+            total_num_tokens: vec![],
             total_num_docs: 0
         }
     }

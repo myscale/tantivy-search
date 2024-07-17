@@ -1,7 +1,7 @@
 use crate::common::errors::IndexSearcherError;
 use crate::search::collector::row_id_bitmap_collector::RowIdRoaringCollector;
 use crate::search::implements::strategy::query_strategy::QueryStrategy;
-use crate::search::utils::convert_utils::ConvertUtils;
+use crate::search::utils::ConvertUtils;
 use crate::{common::constants::LOG_CALLBACK, ERROR};
 use crate::logger::logger_bridge::TantivySearchLogger;
 use roaring::RoaringBitmap;

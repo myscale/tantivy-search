@@ -1,5 +1,5 @@
 use crate::common::cache::flurry_cache::FlurryCache;
-use crate::index::bridge::index_writer_bridge_cache::IndexWriterBridgeCache;
+use crate::index::bridge::IndexWriterBridgeCache;
 use crate::logger::logger_bridge::TantivySearchLogger;
 use crate::search::bridge::index_reader_bridge_cache::IndexReaderBridgeCache;
 use cxx::vector::VectorElement;
@@ -69,12 +69,6 @@ where
     Converter::new(CxxVectorStrategy::new())
 }
 
-// language filters
-// pub static stop_word_filters: Vec<String> = ["".to_string()].to_vec();
-// Avoid some unit test run concurrently.
-
-
-// pub static LOAD_INDEX_MUTEX: Mutex<()> = Mutex::new(());
 
 #[allow(dead_code)]
 pub fn update_logger_for_test(level: LevelFilter) {
