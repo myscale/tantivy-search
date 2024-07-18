@@ -172,7 +172,7 @@ impl Collector for TopDocsWithFilter {
         reader: &SegmentReader,
     ) -> tantivy::Result<<Self::Child as SegmentCollector>::Fruit> {
         // REFINE: need a more efficient way to initialize binary-heap.
-        let heap_len = cmp::min(self.limit, self.initial_heap_size);
+        let heap_len = cmp::max(self.limit, self.initial_heap_size);
         let mut heap: BinaryHeap<RowIdWithScore> = BinaryHeap::with_capacity(heap_len);
 
         let row_id_field_reader = reader
@@ -264,5 +264,84 @@ impl SegmentCollector for TopScoreSegmentCollector {
     fn harvest(self) -> Vec<RowIdWithScore> {
         println!("Not implement");
         vec![]
+    }
+}
+
+
+
+#[cfg(test)]
+mod tests {
+    use crate::search::collector::top_dos_with_bitmap_collector::TopDocsWithFilter;
+
+    use roaring::RoaringBitmap;
+    use tantivy::merge_policy::LogMergePolicy;
+    use tantivy::query::{Query, QueryParser, QueryParserError};
+    use tantivy::schema::{Field, Schema, FAST, INDEXED, STORED, TEXT};
+    use tantivy::{Document, Index, IndexReader, IndexWriter, ReloadPolicy, Searcher, TantivyError, Term};
+    use tantivy::collector::{Count, TopDocs};
+    use tempfile::TempDir;
+    use crate::common::errors::IndexSearcherError;
+    use crate::common::TEST_MUTEX;
+    use crate::ERROR;
+
+    const DOCS_SIZE: usize = 20000;
+
+
+    fn get_reader_and_writer_from_index_path(
+        index_directory_str: &str,
+    ) -> (IndexReader, IndexWriter) {
+        // Construct the schema for the index.
+        let mut schema_builder = Schema::builder();
+        schema_builder.add_u64_field("row_id", FAST | INDEXED);
+        schema_builder.add_text_field("text", TEXT | STORED);
+        let schema = schema_builder.build();
+        // Create the index in the specified directory.
+        let index = Index::create_in_dir(index_directory_str.to_string(), schema.clone()).expect("");
+        let mut writer = index
+            .writer_with_num_threads(2, 1024 * 1024 * 64).expect("");
+        writer.set_merge_policy(Box::new(LogMergePolicy::default()));
+
+        // Index some docs.
+        let mut docs: Vec<String> = vec![];
+        for _ in 0..DOCS_SIZE {
+            docs.push("What is grease means oo Birds of feather flock together A watched pot never boils".to_string())
+        }
+        for row_id in 0..DOCS_SIZE {
+            let mut doc = Document::default();
+            doc.add_u64(schema.get_field("row_id").unwrap(), row_id as u64);
+            doc.add_text(schema.get_field("text").unwrap(), &docs[row_id]);
+            assert!(writer.add_document(doc).is_ok());
+        }
+        assert!(writer.commit().is_ok());
+
+        let reader = index
+            .reader_builder()
+            .reload_policy(ReloadPolicy::OnCommit)
+            .try_into()
+            .expect("");
+
+        (reader, writer)
+    }
+
+    #[test]
+    fn execute_search() {
+        let _guard = TEST_MUTEX.lock().unwrap();
+        let tmp_dir = TempDir::new().unwrap();
+        let tmp_dir = tmp_dir.path().to_str().unwrap();
+
+        let (reader, writer) = get_reader_and_writer_from_index_path(tmp_dir);
+        let fields = vec![Field::from_field_id(1)];
+        let top_docs_collector: TopDocsWithFilter =
+            TopDocsWithFilter::with_limit(10000)
+                .with_searcher(reader.searcher().clone())
+                .with_text_fields(fields.clone())
+                .with_stored_text(true);
+
+        let mut query_parser: QueryParser = QueryParser::for_index(reader.searcher().index(), fields.clone());
+        let text_query: Box<dyn Query> = query_parser.parse_query("of").expect("");
+
+        // let res = reader.searcher().search(&text_query, &TopDocs::with_limit(2010)).expect("");
+        let res = reader.searcher().search(&text_query, &top_docs_collector).expect("");
+        assert_eq!(res.len(), 10000);
     }
 }
