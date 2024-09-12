@@ -17,7 +17,7 @@ use utils::ffi_utils::*;
 // re-export log ffi function.
 pub use logger::ffi_logger::*;
 
-#[cxx::bridge]
+#[cxx::bridge(namespace = "TANTIVY")]
 pub mod ffi {
 
     #[derive(Debug, Clone)]

@@ -710,20 +710,23 @@ std::size_t align_of() {
 } // namespace cxxbridge1
 } // namespace rust
 
-struct RowIdWithScore;
-struct DocWithFreq;
-struct FieldTokenNums;
-struct Statistics;
-struct FFIError;
-struct FFIBoolResult;
-struct FFIU64Result;
-struct FFIVecU8Result;
-struct FFIVecRowIdWithScoreResult;
-struct FFIVecDocWithFreqResult;
-struct FFIFieldTokenNumsResult;
+namespace TANTIVY {
+  struct RowIdWithScore;
+  struct DocWithFreq;
+  struct FieldTokenNums;
+  struct Statistics;
+  struct FFIError;
+  struct FFIBoolResult;
+  struct FFIU64Result;
+  struct FFIVecU8Result;
+  struct FFIVecRowIdWithScoreResult;
+  struct FFIVecDocWithFreqResult;
+  struct FFIFieldTokenNumsResult;
+}
 
-#ifndef CXXBRIDGE1_STRUCT_RowIdWithScore
-#define CXXBRIDGE1_STRUCT_RowIdWithScore
+namespace TANTIVY {
+#ifndef CXXBRIDGE1_STRUCT_TANTIVY$RowIdWithScore
+#define CXXBRIDGE1_STRUCT_TANTIVY$RowIdWithScore
 struct RowIdWithScore final {
   ::std::uint64_t row_id;
   float score;
@@ -733,10 +736,10 @@ struct RowIdWithScore final {
 
   using IsRelocatable = ::std::true_type;
 };
-#endif // CXXBRIDGE1_STRUCT_RowIdWithScore
+#endif // CXXBRIDGE1_STRUCT_TANTIVY$RowIdWithScore
 
-#ifndef CXXBRIDGE1_STRUCT_DocWithFreq
-#define CXXBRIDGE1_STRUCT_DocWithFreq
+#ifndef CXXBRIDGE1_STRUCT_TANTIVY$DocWithFreq
+#define CXXBRIDGE1_STRUCT_TANTIVY$DocWithFreq
 struct DocWithFreq final {
   ::rust::String term_str;
   ::std::uint32_t field_id;
@@ -746,10 +749,10 @@ struct DocWithFreq final {
   bool operator!=(DocWithFreq const &) const noexcept;
   using IsRelocatable = ::std::true_type;
 };
-#endif // CXXBRIDGE1_STRUCT_DocWithFreq
+#endif // CXXBRIDGE1_STRUCT_TANTIVY$DocWithFreq
 
-#ifndef CXXBRIDGE1_STRUCT_FieldTokenNums
-#define CXXBRIDGE1_STRUCT_FieldTokenNums
+#ifndef CXXBRIDGE1_STRUCT_TANTIVY$FieldTokenNums
+#define CXXBRIDGE1_STRUCT_TANTIVY$FieldTokenNums
 struct FieldTokenNums final {
   ::std::uint32_t field_id;
   ::std::uint64_t field_total_tokens;
@@ -758,103 +761,103 @@ struct FieldTokenNums final {
   bool operator!=(FieldTokenNums const &) const noexcept;
   using IsRelocatable = ::std::true_type;
 };
-#endif // CXXBRIDGE1_STRUCT_FieldTokenNums
+#endif // CXXBRIDGE1_STRUCT_TANTIVY$FieldTokenNums
 
-#ifndef CXXBRIDGE1_STRUCT_Statistics
-#define CXXBRIDGE1_STRUCT_Statistics
+#ifndef CXXBRIDGE1_STRUCT_TANTIVY$Statistics
+#define CXXBRIDGE1_STRUCT_TANTIVY$Statistics
 struct Statistics final {
-  ::rust::Vec<::DocWithFreq> docs_freq;
-  ::rust::Vec<::FieldTokenNums> total_num_tokens;
+  ::rust::Vec<::TANTIVY::DocWithFreq> docs_freq;
+  ::rust::Vec<::TANTIVY::FieldTokenNums> total_num_tokens;
   ::std::uint64_t total_num_docs;
 
   using IsRelocatable = ::std::true_type;
 };
-#endif // CXXBRIDGE1_STRUCT_Statistics
+#endif // CXXBRIDGE1_STRUCT_TANTIVY$Statistics
 
-#ifndef CXXBRIDGE1_STRUCT_FFIError
-#define CXXBRIDGE1_STRUCT_FFIError
+#ifndef CXXBRIDGE1_STRUCT_TANTIVY$FFIError
+#define CXXBRIDGE1_STRUCT_TANTIVY$FFIError
 struct FFIError final {
   bool is_error;
   ::rust::String message;
 
   using IsRelocatable = ::std::true_type;
 };
-#endif // CXXBRIDGE1_STRUCT_FFIError
+#endif // CXXBRIDGE1_STRUCT_TANTIVY$FFIError
 
-#ifndef CXXBRIDGE1_STRUCT_FFIBoolResult
-#define CXXBRIDGE1_STRUCT_FFIBoolResult
+#ifndef CXXBRIDGE1_STRUCT_TANTIVY$FFIBoolResult
+#define CXXBRIDGE1_STRUCT_TANTIVY$FFIBoolResult
 struct FFIBoolResult final {
   bool result;
-  ::FFIError error;
+  ::TANTIVY::FFIError error;
 
   using IsRelocatable = ::std::true_type;
 };
-#endif // CXXBRIDGE1_STRUCT_FFIBoolResult
+#endif // CXXBRIDGE1_STRUCT_TANTIVY$FFIBoolResult
 
-#ifndef CXXBRIDGE1_STRUCT_FFIU64Result
-#define CXXBRIDGE1_STRUCT_FFIU64Result
+#ifndef CXXBRIDGE1_STRUCT_TANTIVY$FFIU64Result
+#define CXXBRIDGE1_STRUCT_TANTIVY$FFIU64Result
 struct FFIU64Result final {
   ::std::uint64_t result;
-  ::FFIError error;
+  ::TANTIVY::FFIError error;
 
   using IsRelocatable = ::std::true_type;
 };
-#endif // CXXBRIDGE1_STRUCT_FFIU64Result
+#endif // CXXBRIDGE1_STRUCT_TANTIVY$FFIU64Result
 
-#ifndef CXXBRIDGE1_STRUCT_FFIVecU8Result
-#define CXXBRIDGE1_STRUCT_FFIVecU8Result
+#ifndef CXXBRIDGE1_STRUCT_TANTIVY$FFIVecU8Result
+#define CXXBRIDGE1_STRUCT_TANTIVY$FFIVecU8Result
 struct FFIVecU8Result final {
   ::rust::Vec<::std::uint8_t> result;
-  ::FFIError error;
+  ::TANTIVY::FFIError error;
 
   using IsRelocatable = ::std::true_type;
 };
-#endif // CXXBRIDGE1_STRUCT_FFIVecU8Result
+#endif // CXXBRIDGE1_STRUCT_TANTIVY$FFIVecU8Result
 
-#ifndef CXXBRIDGE1_STRUCT_FFIVecRowIdWithScoreResult
-#define CXXBRIDGE1_STRUCT_FFIVecRowIdWithScoreResult
+#ifndef CXXBRIDGE1_STRUCT_TANTIVY$FFIVecRowIdWithScoreResult
+#define CXXBRIDGE1_STRUCT_TANTIVY$FFIVecRowIdWithScoreResult
 struct FFIVecRowIdWithScoreResult final {
-  ::rust::Vec<::RowIdWithScore> result;
-  ::FFIError error;
+  ::rust::Vec<::TANTIVY::RowIdWithScore> result;
+  ::TANTIVY::FFIError error;
 
   using IsRelocatable = ::std::true_type;
 };
-#endif // CXXBRIDGE1_STRUCT_FFIVecRowIdWithScoreResult
+#endif // CXXBRIDGE1_STRUCT_TANTIVY$FFIVecRowIdWithScoreResult
 
-#ifndef CXXBRIDGE1_STRUCT_FFIVecDocWithFreqResult
-#define CXXBRIDGE1_STRUCT_FFIVecDocWithFreqResult
+#ifndef CXXBRIDGE1_STRUCT_TANTIVY$FFIVecDocWithFreqResult
+#define CXXBRIDGE1_STRUCT_TANTIVY$FFIVecDocWithFreqResult
 struct FFIVecDocWithFreqResult final {
-  ::rust::Vec<::DocWithFreq> result;
-  ::FFIError error;
+  ::rust::Vec<::TANTIVY::DocWithFreq> result;
+  ::TANTIVY::FFIError error;
 
   using IsRelocatable = ::std::true_type;
 };
-#endif // CXXBRIDGE1_STRUCT_FFIVecDocWithFreqResult
+#endif // CXXBRIDGE1_STRUCT_TANTIVY$FFIVecDocWithFreqResult
 
-#ifndef CXXBRIDGE1_STRUCT_FFIFieldTokenNumsResult
-#define CXXBRIDGE1_STRUCT_FFIFieldTokenNumsResult
+#ifndef CXXBRIDGE1_STRUCT_TANTIVY$FFIFieldTokenNumsResult
+#define CXXBRIDGE1_STRUCT_TANTIVY$FFIFieldTokenNumsResult
 struct FFIFieldTokenNumsResult final {
-  ::rust::Vec<::FieldTokenNums> result;
-  ::FFIError error;
+  ::rust::Vec<::TANTIVY::FieldTokenNums> result;
+  ::TANTIVY::FFIError error;
 
   using IsRelocatable = ::std::true_type;
 };
-#endif // CXXBRIDGE1_STRUCT_FFIFieldTokenNumsResult
+#endif // CXXBRIDGE1_STRUCT_TANTIVY$FFIFieldTokenNumsResult
 
-::FFIBoolResult ffi_verify_index_parameter(::std::string const &index_json_parameter) noexcept;
+::TANTIVY::FFIBoolResult ffi_verify_index_parameter(::std::string const &index_json_parameter) noexcept;
 
 // Create tantivy index.
 // arguments:
 // - `index_path`: index directory.
 // - `column_names`: which columns will be used to build index.
 // - `index_json_parameter`: config index with json.
-::FFIBoolResult ffi_create_index_with_parameter(::std::string const &index_path, ::std::vector<::std::string> const &column_names, ::std::string const &index_json_parameter) noexcept;
+::TANTIVY::FFIBoolResult ffi_create_index_with_parameter(::std::string const &index_path, ::std::vector<::std::string> const &column_names, ::std::string const &index_json_parameter) noexcept;
 
 // Create tantivy index by default.
 // arguments:
 // - `index_path`: index directory.
 // - `column_names`: which columns will be used to build index.
-::FFIBoolResult ffi_create_index(::std::string const &index_path, ::std::vector<::std::string> const &column_names) noexcept;
+::TANTIVY::FFIBoolResult ffi_create_index(::std::string const &index_path, ::std::vector<::std::string> const &column_names) noexcept;
 
 // Index multi column docs with given rowId.
 // arguments:
@@ -862,66 +865,66 @@ struct FFIFieldTokenNumsResult final {
 // - `row_id`: row_id given by ClickHouse.
 // - `column_names`: align with column_docs.
 // - `column_docs`: align with column_names.
-::FFIBoolResult ffi_index_multi_column_docs(::std::string const &index_path, ::std::uint64_t row_id, ::std::vector<::std::string> const &column_names, ::std::vector<::std::string> const &column_docs) noexcept;
+::TANTIVY::FFIBoolResult ffi_index_multi_column_docs(::std::string const &index_path, ::std::uint64_t row_id, ::std::vector<::std::string> const &column_names, ::std::vector<::std::string> const &column_docs) noexcept;
 
 // Delete a group of rowIds.
 // arguments:
 // - `index_path`: index directory.
 // - `row_ids`: a group of rowIds need be deleted.
-::FFIBoolResult ffi_delete_row_ids(::std::string const &index_path, ::std::vector<::std::uint32_t> const &row_ids) noexcept;
+::TANTIVY::FFIBoolResult ffi_delete_row_ids(::std::string const &index_path, ::std::vector<::std::uint32_t> const &row_ids) noexcept;
 
 // Commit index writer
 // arguments:
 // - `index_path`: index directory.
-::FFIBoolResult ffi_index_writer_commit(::std::string const &index_path) noexcept;
+::TANTIVY::FFIBoolResult ffi_index_writer_commit(::std::string const &index_path) noexcept;
 
 // Free index writer
 // arguments:
 // - `index_path`: index directory.
-::FFIBoolResult ffi_free_index_writer(::std::string const &index_path) noexcept;
+::TANTIVY::FFIBoolResult ffi_free_index_writer(::std::string const &index_path) noexcept;
 
 // Load index reader
 // arguments:
 // - `index_path`: index directory.
-::FFIBoolResult ffi_load_index_reader(::std::string const &index_path) noexcept;
+::TANTIVY::FFIBoolResult ffi_load_index_reader(::std::string const &index_path) noexcept;
 
 // Free index reader
 // arguments:
 // - `index_path`: index directory.
-::FFIBoolResult ffi_free_index_reader(::std::string const &index_path) noexcept;
+::TANTIVY::FFIBoolResult ffi_free_index_reader(::std::string const &index_path) noexcept;
 
 // Get indexed docs numbers.
 // arguments:
 // - `index_path`: index directory.
-::FFIU64Result ffi_get_indexed_doc_counts(::std::string const &index_path) noexcept;
+::TANTIVY::FFIU64Result ffi_get_indexed_doc_counts(::std::string const &index_path) noexcept;
 
 // Execute a term query and return rowIds u8 bitmap.
 // arguments:
 // - `index_path`: index directory.
 // - `column_name`: which column will execute search.
 // - `term`: term needs to be searched.
-::FFIVecU8Result ffi_query_term_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &term) noexcept;
+::TANTIVY::FFIVecU8Result ffi_query_term_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &term) noexcept;
 
 // Execute a group of terms query and return rowIds u8 bitmap.
 // arguments:
 // - `index_path`: index directory.
 // - `column_name`: which column will execute search.
 // - `terms`: terms need to be searched.
-::FFIVecU8Result ffi_query_terms_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::vector<::std::string> const &terms) noexcept;
+::TANTIVY::FFIVecU8Result ffi_query_terms_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::vector<::std::string> const &terms) noexcept;
 
 // Execute a sentence query and return rowIds u8 bitmap.
 // arguments:
 // - `index_path`: index directory.
 // - `column_name`: which column will execute search.
 // - `sentence`: sentence needs to be searched.
-::FFIVecU8Result ffi_query_sentence_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &sentence) noexcept;
+::TANTIVY::FFIVecU8Result ffi_query_sentence_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &sentence) noexcept;
 
 // Execute a regex query and return rowIds u8 bitmap.
 // arguments:
 // - `index_path`: index directory.
 // - `column_name`: which column will execute search.
 // - `pattern`: pattern should be given by ClickHouse.
-::FFIVecU8Result ffi_regex_term_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &pattern) noexcept;
+::TANTIVY::FFIVecU8Result ffi_regex_term_bitmap(::std::string const &index_path, ::std::string const &column_name, ::std::string const &pattern) noexcept;
 
 // Execute a bm25 query.
 // arguments:
@@ -931,20 +934,21 @@ struct FFIFieldTokenNumsResult final {
 // - `u8_alive_bitmap`: alive row ids given by u8 bitmap.
 // - `query_with_filter`:use alive_bitmap or not.
 // - `statistics`: for multi parts bm25 statistics info.
-::FFIVecRowIdWithScoreResult ffi_bm25_search(::std::string const &index_path, ::std::string const &sentence, ::std::uint32_t top_k, ::std::vector<::std::uint8_t> const &u8_alive_bitmap, bool query_with_filter, bool enable_nlq, bool operator_or, ::Statistics const &statistics) noexcept;
+::TANTIVY::FFIVecRowIdWithScoreResult ffi_bm25_search(::std::string const &index_path, ::std::string const &sentence, ::std::uint32_t top_k, ::std::vector<::std::uint8_t> const &u8_alive_bitmap, bool query_with_filter, bool enable_nlq, bool operator_or, ::TANTIVY::Statistics const &statistics) noexcept;
 
 // Get doc freq for current part.
 // arguments:
 // - `index_path`: index directory.
 // - `sentence`: query_str.
-::FFIVecDocWithFreqResult ffi_get_doc_freq(::std::string const &index_path, ::std::string const &sentence) noexcept;
+::TANTIVY::FFIVecDocWithFreqResult ffi_get_doc_freq(::std::string const &index_path, ::std::string const &sentence) noexcept;
 
 // Get total num docs for current part.
 // arguments:
 // - `index_path`: index directory.
-::FFIU64Result ffi_get_total_num_docs(::std::string const &index_path) noexcept;
+::TANTIVY::FFIU64Result ffi_get_total_num_docs(::std::string const &index_path) noexcept;
 
 // Get total num tokens for current part.
 // arguments:
 // - `index_path`: index directory.
-::FFIFieldTokenNumsResult ffi_get_total_num_tokens(::std::string const &index_path) noexcept;
+::TANTIVY::FFIFieldTokenNumsResult ffi_get_total_num_tokens(::std::string const &index_path) noexcept;
+} // namespace TANTIVY
