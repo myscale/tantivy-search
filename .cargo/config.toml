@@ -1,2 +1,0 @@
-[env]
-CXXFLAGS = "-Wno-dollar-in-identifier-extension -Wno-unused-macros "
