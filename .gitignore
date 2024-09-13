@@ -11,3 +11,4 @@ cobertura.xml
 *.lcov
 *.profdata
 *.profraw
+build.rs
