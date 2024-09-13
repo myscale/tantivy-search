@@ -12,3 +12,4 @@ cobertura.xml
 *.profdata
 *.profraw
 build.rs
+.cargo/config.toml
