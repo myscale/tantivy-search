@@ -49,6 +49,9 @@ use-shared-search-pool = []
 default = ["use-shared-search-pool"]
 # default = ["use-flurry-cache", "use-shared-search-pool"]
 
+[profile.release]
+debug = true
+
 [profile.relwithdebinfo]
 inherits = "release"
 debug = true
