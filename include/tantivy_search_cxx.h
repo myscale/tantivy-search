@@ -934,7 +934,7 @@ struct FFIFieldTokenNumsResult final {
 // - `u8_alive_bitmap`: alive row ids given by u8 bitmap.
 // - `query_with_filter`:use alive_bitmap or not.
 // - `statistics`: for multi parts bm25 statistics info.
-::TANTIVY::FFIVecRowIdWithScoreResult ffi_bm25_search(::std::string const &index_path, ::std::string const &sentence, ::std::uint32_t top_k, ::std::vector<::std::uint8_t> const &u8_alive_bitmap, bool query_with_filter, bool enable_nlq, bool operator_or, ::TANTIVY::Statistics const &statistics) noexcept;
+::TANTIVY::FFIVecRowIdWithScoreResult ffi_bm25_search(::std::string const &index_path, ::std::string const &sentence, ::std::vector<::std::string> const &column_names, ::std::uint32_t top_k, ::std::vector<::std::uint8_t> const &u8_alive_bitmap, bool query_with_filter, bool enable_nlq, bool operator_or, ::TANTIVY::Statistics const &statistics) noexcept;
 
 // Get doc freq for current part.
 // arguments:

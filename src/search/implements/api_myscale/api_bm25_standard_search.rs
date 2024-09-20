@@ -6,6 +6,7 @@ use crate::search::implements::strategy::BM25StandardQueryStrategy;
 pub fn bm25_standard_search(
     index_path: &str,
     sentence: &str,
+    column_names: &Vec<String>,
     top_k: u32,
     u8_alive_bitmap: &Vec<u8>,
     query_with_filter: bool,
@@ -16,6 +17,7 @@ pub fn bm25_standard_search(
     // Choose query strategy to construct query executor.
     let bm25_standard_query: BM25StandardQueryStrategy<'_> = BM25StandardQueryStrategy {
         sentence,
+        column_names,
         top_k: &top_k,
         query_with_filter: &query_with_filter,
         u8_alive_bitmap,

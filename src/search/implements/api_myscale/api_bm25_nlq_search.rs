@@ -6,6 +6,7 @@ use crate::search::implements::strategy::BM25NaturalLanguageStrategy;
 pub fn bm25_natural_language_search(
     index_path: &str,
     sentence: &str,
+    column_names: &Vec<String>,
     top_k: u32,
     u8_alive_bitmap: &Vec<u8>,
     query_with_filter: bool,
@@ -17,6 +18,7 @@ pub fn bm25_natural_language_search(
     let bm25_natural_language_query: BM25NaturalLanguageStrategy<'_> =
         BM25NaturalLanguageStrategy {
             sentence,
+            column_names,
             top_k: &top_k,
             u8_alive_bitmap,
             query_with_filter: &query_with_filter,

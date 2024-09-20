@@ -12,6 +12,7 @@ use crate::search::implements::strategy::utils::StrategyUtils;
 
 pub struct BM25StandardQueryStrategy<'a> {
     pub sentence: &'a str,
+    pub column_names: &'a Vec<String>,
     pub top_k: &'a u32,
     pub u8_alive_bitmap: &'a Vec<u8>,
     pub query_with_filter: &'a bool,
@@ -24,7 +25,11 @@ impl<'a> QueryStrategy<Vec<RowIdWithScore>> for BM25StandardQueryStrategy<'a> {
         static FUNC_NAME: &str = "BM25StandardQueryStrategy";
 
         let schema: Schema = searcher.index().schema();
-        let fields = StrategyUtils::get_fields_without_row_id(&schema);
+        let fields = if self.column_names.is_empty() {
+            StrategyUtils::get_fields_without_row_id(&schema)
+        } else {
+            StrategyUtils::get_fileds_with_columns(&schema, self.column_names)?
+        };
 
         for col_field in &fields {
             let field_type: &FieldType = schema.get_field_entry(*col_field).field_type();

@@ -1,4 +1,4 @@
-use crate::cxx_vector_converter;
+use crate::{cxx_vector_converter, CXX_VECTOR_STRING_CONVERTER};
 use crate::ffi::{FFIError, FFIFieldTokenNumsResult, FFIU64Result, FFIVecDocWithFreqResult, FFIVecRowIdWithScoreResult, Statistics};
 use crate::search::implements::{bm25_natural_language_search, bm25_standard_search, get_doc_freq,
                                 get_total_num_docs, get_total_num_tokens};
@@ -10,6 +10,7 @@ use crate::utils::api_utils::ApiUtils;
 pub fn ffi_bm25_search(
     index_path: &CxxString,
     sentence: &CxxString,
+    column_names: &CxxVector<CxxString>,
     top_k: u32,
     u8_alive_bitmap: &CxxVector<u8>,
     query_with_filter: bool,
@@ -36,6 +37,13 @@ pub fn ffi_bm25_search(
         }
     };
 
+    let column_names: Vec<String> = match CXX_VECTOR_STRING_CONVERTER.convert(column_names) {
+        Ok(ts) => ts,
+        Err(e) => {
+            return ApiUtils::handle_error(FUNC_NAME, "Can't convert 'terms'", e.to_string());
+        }
+    };
+
     let u8_alive_bitmap: Vec<u8> = match cxx_vector_converter::<u8>().convert(u8_alive_bitmap) {
         Ok(bitmap) => bitmap,
         Err(e) => {
@@ -48,6 +56,7 @@ pub fn ffi_bm25_search(
         match bm25_natural_language_search(
             &index_path,
             &sentence,
+            &column_names,
             top_k,
             &u8_alive_bitmap,
             query_with_filter,
@@ -70,6 +79,7 @@ pub fn ffi_bm25_search(
         match bm25_standard_search(
             &index_path,
             &sentence,
+            &column_names,
             top_k,
             &u8_alive_bitmap,
             query_with_filter,

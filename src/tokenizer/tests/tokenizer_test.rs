@@ -123,6 +123,7 @@ mod tests {
         let bm25_sentence_strategy: BM25StandardQueryStrategy<'_> = BM25StandardQueryStrategy {
             // column_names: &vec!["col1".to_string()],
             sentence,
+            column_names: &vec![],
             top_k: &10,
             query_with_filter: &false,
             u8_alive_bitmap: &vec![],
@@ -148,6 +149,7 @@ mod tests {
         let bm25_nlq_strategy: BM25NaturalLanguageStrategy<'_> = BM25NaturalLanguageStrategy {
             // column_names: &vec!["col1".to_string()],
             sentence,
+            column_names: &vec![],
             top_k: &10,
             query_with_filter: &false,
             u8_alive_bitmap: &vec![],

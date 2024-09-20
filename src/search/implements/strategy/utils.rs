@@ -21,4 +21,14 @@ impl StrategyUtils {
             error
         })
     }
+
+    pub(super) fn get_fileds_with_columns(schema: &Schema, column_names: &Vec<String>) -> Result<Vec<Field>, IndexSearcherError> {
+        column_names.iter().map(|column_name| {
+            schema.get_field(column_name).map_err(|e| {
+                let error: IndexSearcherError = IndexSearcherError::TantivyError(e);
+                ERROR!("{}", error);
+                error
+            })
+        }).collect()
+    }
 }

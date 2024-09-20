@@ -210,6 +210,7 @@ pub mod ffi {
         pub fn ffi_bm25_search(
             index_path: &CxxString,
             sentence: &CxxString,
+            column_names: &CxxVector<CxxString>,
             top_k: u32,
             u8_alive_bitmap: &CxxVector<u8>,
             query_with_filter: bool,
