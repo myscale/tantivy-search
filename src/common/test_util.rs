@@ -251,6 +251,7 @@ impl SinglePartTest {
             res = bm25_natural_language_search(
                 tmp_dir,
                 query_str,
+                &vec![],
                 100000,
                 u8_alive_bitmap,
                 query_with_filter,
@@ -262,6 +263,7 @@ impl SinglePartTest {
             res = bm25_standard_search(
                 tmp_dir,
                 query_str,
+                &vec![],
                 100000,
                 u8_alive_bitmap,
                 query_with_filter,
@@ -544,6 +546,7 @@ impl MultiPartsTest {
         if enable_nlq {
             part_0_res = bm25_natural_language_search(
                 part_0_dir, query_str,
+                &vec![],
                 10000,
                 u8_alive_bitmap,
                 query_with_filter,
@@ -554,6 +557,7 @@ impl MultiPartsTest {
         } else {
             part_0_res = bm25_standard_search(
                 part_0_dir, query_str,
+                &vec![],
                 10000,
                 u8_alive_bitmap,
                 query_with_filter,
@@ -573,6 +577,7 @@ impl MultiPartsTest {
         if enable_nlq {
             part_1_res = bm25_natural_language_search(
                 part_1_dir, query_str,
+                &vec![],
                 10000,
                 u8_alive_bitmap,
                 query_with_filter,
@@ -583,6 +588,7 @@ impl MultiPartsTest {
         } else {
             part_1_res = bm25_standard_search(
                 part_1_dir, query_str,
+                &vec![],
                 10000,
                 u8_alive_bitmap,
                 query_with_filter,
@@ -601,6 +607,7 @@ impl MultiPartsTest {
             optimized_result = bm25_natural_language_search(
                 part_optimized_dir,
                 query_str,
+                &vec![],
                 10000,
                 u8_alive_bitmap,
                 query_with_filter,
@@ -612,6 +619,7 @@ impl MultiPartsTest {
             optimized_result = bm25_standard_search(
                 part_optimized_dir,
                 query_str,
+                &vec![],
                 10000,
                 u8_alive_bitmap,
                 query_with_filter,
