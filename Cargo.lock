@@ -243,15 +243,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cang-jie"
-version = "0.18.0"
-dependencies = [
- "jieba-rs",
- "log",
- "tantivy",
-]
-
-[[package]]
 name = "cc"
 version = "1.0.83"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1670,6 +1661,7 @@ checksum = "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
 [[package]]
 name = "ownedbytes"
 version = "0.6.0"
+source = "git+https://github.com/myscale/tantivy.git?rev=aa6cb36d#aa6cb36db2a0ded84b820b727ffd9af78cd45645"
 dependencies = [
  "stable_deref_trait",
 ]
@@ -2272,6 +2264,7 @@ dependencies = [
 [[package]]
 name = "tantivy"
 version = "0.21.1"
+source = "git+https://github.com/myscale/tantivy.git?rev=aa6cb36d#aa6cb36db2a0ded84b820b727ffd9af78cd45645"
 dependencies = [
  "aho-corasick",
  "arc-swap",
@@ -2322,6 +2315,7 @@ dependencies = [
 [[package]]
 name = "tantivy-bitpacker"
 version = "0.5.0"
+source = "git+https://github.com/myscale/tantivy.git?rev=aa6cb36d#aa6cb36db2a0ded84b820b727ffd9af78cd45645"
 dependencies = [
  "bitpacking",
 ]
@@ -2329,6 +2323,7 @@ dependencies = [
 [[package]]
 name = "tantivy-columnar"
 version = "0.2.0"
+source = "git+https://github.com/myscale/tantivy.git?rev=aa6cb36d#aa6cb36db2a0ded84b820b727ffd9af78cd45645"
 dependencies = [
  "fastdivide",
  "fnv",
@@ -2343,6 +2338,7 @@ dependencies = [
 [[package]]
 name = "tantivy-common"
 version = "0.6.0"
+source = "git+https://github.com/myscale/tantivy.git?rev=aa6cb36d#aa6cb36db2a0ded84b820b727ffd9af78cd45645"
 dependencies = [
  "async-trait",
  "byteorder",
@@ -2365,6 +2361,7 @@ dependencies = [
 [[package]]
 name = "tantivy-query-grammar"
 version = "0.21.0"
+source = "git+https://github.com/myscale/tantivy.git?rev=aa6cb36d#aa6cb36db2a0ded84b820b727ffd9af78cd45645"
 dependencies = [
  "nom",
 ]
@@ -2372,6 +2369,7 @@ dependencies = [
 [[package]]
 name = "tantivy-sstable"
 version = "0.2.0"
+source = "git+https://github.com/myscale/tantivy.git?rev=aa6cb36d#aa6cb36db2a0ded84b820b727ffd9af78cd45645"
 dependencies = [
  "tantivy-common",
  "tantivy-fst",
@@ -2381,6 +2379,7 @@ dependencies = [
 [[package]]
 name = "tantivy-stacker"
 version = "0.2.0"
+source = "git+https://github.com/myscale/tantivy.git?rev=aa6cb36d#aa6cb36db2a0ded84b820b727ffd9af78cd45645"
 dependencies = [
  "murmurhash32",
  "tantivy-common",
@@ -2389,6 +2388,7 @@ dependencies = [
 [[package]]
 name = "tantivy-tokenizer-api"
 version = "0.2.0"
+source = "git+https://github.com/myscale/tantivy.git?rev=aa6cb36d#aa6cb36db2a0ded84b820b727ffd9af78cd45645"
 dependencies = [
  "serde",
 ]
@@ -2398,7 +2398,6 @@ name = "tantivy_search"
 version = "0.1.0"
 dependencies = [
  "cached",
- "cang-jie",
  "clap",
  "cxx",
  "cxx-build",

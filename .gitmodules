@@ -4,7 +4,6 @@
 [submodule "contrib/easylogging"]
 	path = contrib/easylogging
 	url = https://github.com/abumq/easyloggingpp.git
-
 [submodule "contrib/boost"]
 	path = contrib/boost
 	url = https://github.com/ClickHouse/boost
@@ -17,9 +16,6 @@
 [submodule "contrib/tantivy"]
 	path = contrib/tantivy
 	url = https://github.com/myscale/tantivy.git
-[submodule "contrib/cang-jie"]
-	path = contrib/cang-jie
-	url = https://github.com/myscale/cang-jie.git
 [submodule "contrib/corrosion-rs"]
 	path = contrib/corrosion-rs
 	url = https://github.com/corrosion-rs/corrosion.git
